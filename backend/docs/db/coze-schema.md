@@ -3,6 +3,9 @@
 > 按项目架构规则重构：从单表 `articles` 拆分为 `users` + `notes` 两张表，新增多用户认证支持。
 >
 > Coze 可用字段类型仅支持：`String`、`Integer`、`Time`、`Number`、`Boolean`。
+>
+> **⚠️ `pg_id` 字段注意**：PG 主键已升级为 `BIGINT`，当生成的 ID 超过 `2^31-1` 时可能超出 Coze `Integer` 类型容量。
+> 如果遇到溢出问题，需在 Coze 中将 `pg_id` 字段类型改为 `String`，以字符串形式存储 BIGINT ID。
 
 ---
 

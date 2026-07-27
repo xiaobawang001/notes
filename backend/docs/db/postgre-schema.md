@@ -12,7 +12,7 @@
 
 ```sql
 CREATE TABLE IF NOT EXISTS users (
-    id              SERIAL PRIMARY KEY,
+    id              BIGSERIAL PRIMARY KEY,
     username        VARCHAR(100) NOT NULL,
     password_hash   VARCHAR(255) NOT NULL,
     email           VARCHAR(200),
@@ -25,7 +25,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users (username);
 CREATE INDEX IF NOT EXISTS idx_users_is_active ON users (is_active);
 
 COMMENT ON TABLE users IS '用户表';
-COMMENT ON COLUMN users.id IS '主键（自增）';
+COMMENT ON COLUMN users.id IS '主键（BIGINT 自增）';
 COMMENT ON COLUMN users.username IS '用户名（应用层保证唯一）';
 COMMENT ON COLUMN users.password_hash IS 'bcrypt 哈希密码';
 COMMENT ON COLUMN users.email IS '邮箱（可选）';
@@ -38,7 +38,7 @@ COMMENT ON COLUMN users.role IS 'user=普通用户, admin=管理员';
 
 | 字段 | PG 类型 | 约束 | 默认值 | 说明 |
 |------|---------|------|--------|------|
-| id | SERIAL | PK | 自增 | 主键，对应 Coze `pg_id` |
+| id | BIGSERIAL | PK | 自增 | 主键，对应 Coze `pg_id` |
 | username | VARCHAR(100) | UNIQUE, NOT NULL | — | 用户名 |
 | password_hash | VARCHAR(255) | NOT NULL | — | bcrypt 哈希 |
 | email | VARCHAR(200) | — | NULL | 邮箱 |
@@ -63,13 +63,13 @@ COMMENT ON COLUMN users.role IS 'user=普通用户, admin=管理员';
 
 ```sql
 CREATE TABLE IF NOT EXISTS notes (
-    id              SERIAL PRIMARY KEY,
-    user_id         INTEGER NOT NULL,
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         BIGINT NOT NULL,
     type            INTEGER NOT NULL DEFAULT 2,
     title           VARCHAR(500) NOT NULL,
     slug            VARCHAR(200),
     content         TEXT,
-    parent_id       INTEGER NOT NULL DEFAULT 0,
+    parent_id       BIGINT NOT NULL DEFAULT 0,
     status          INTEGER NOT NULL DEFAULT 1,
     pinned          INTEGER NOT NULL DEFAULT 0,
     sort_order      INTEGER NOT NULL DEFAULT 0,
@@ -88,13 +88,13 @@ CREATE INDEX IF NOT EXISTS idx_notes_pinned ON notes (pinned);
 CREATE INDEX IF NOT EXISTS idx_notes_is_deleted ON notes (is_deleted);
 
 COMMENT ON TABLE notes IS '笔记表（含目录和文章）';
-COMMENT ON COLUMN notes.id IS '主键（自增），对应 Coze pg_id';
+COMMENT ON COLUMN notes.id IS '主键（BIGINT 自增），对应 Coze pg_id';
 COMMENT ON COLUMN notes.user_id IS '所属用户 ID（外键引用 users.id）';
 COMMENT ON COLUMN notes.type IS '1=folder, 2=article';
 COMMENT ON COLUMN notes.title IS '标题';
 COMMENT ON COLUMN notes.slug IS 'URL 标识（文章必填）';
 COMMENT ON COLUMN notes.content IS 'Markdown 正文';
-COMMENT ON COLUMN notes.parent_id IS '父级 ID, 0=顶级';
+COMMENT ON COLUMN notes.parent_id IS '父级 ID（BIGINT）, 0=顶级';
 COMMENT ON COLUMN notes.status IS '1=draft, 2=published';
 COMMENT ON COLUMN notes.pinned IS '0=否, 1=是';
 COMMENT ON COLUMN notes.sort_order IS '排序权重（越小越靠前）';
@@ -109,13 +109,13 @@ COMMENT ON COLUMN notes.updated_at IS '更新时间';
 
 | 字段 | PG 类型 | 约束 | 默认值 | 说明 |
 |------|---------|------|--------|------|
-| id | SERIAL | PK | 自增 | 主键，对应 Coze `pg_id` |
-| user_id | INTEGER | FK → users.id | — | 所属用户 |
+| id | BIGSERIAL | PK | 自增 | 主键，对应 Coze `pg_id` |
+| user_id | BIGINT | FK → users.id | — | 所属用户 |
 | type | INTEGER | INDEX | 2 | 1=folder, 2=article |
 | title | VARCHAR(500) | NOT NULL | — | 标题 |
 | slug | VARCHAR(200) | — | NULL | URL 标识 |
 | content | TEXT | — | NULL | Markdown 正文 |
-| parent_id | INTEGER | INDEX | 0 | 0=顶级 |
+| parent_id | BIGINT | INDEX | 0 | 0=顶级 |
 | status | INTEGER | INDEX | 1 | 1=draft, 2=published |
 | pinned | INTEGER | INDEX | 0 | 0=否, 1=是 |
 | sort_order | INTEGER | — | 0 | 排序权重 |

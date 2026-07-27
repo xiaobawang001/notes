@@ -36,13 +36,26 @@ async def get_current_user(
         return None
 
     user_id = payload.get("sub")
-    if not user_id:
+    username = payload.get("username")
+    if not user_id and not username:
         return None
 
     # 通过仓库查询用户（兼容 Coze / PostgreSQL）
     try:
         repo = get_user_repo()
-        user = await repo.find_by_id(int(user_id))
+        user = None
+
+        # 优先按 sub 查询；sub 可转整数即按 ID 查询（PG 已升级 BIGINT）
+        if user_id is not None:
+            try:
+                uid = int(user_id)
+                user = await repo.find_by_id(uid)
+            except (TypeError, ValueError):
+                user = None
+
+        if user is None and username:
+            user = await repo.find_by_username(username)
+
         if user and user.get("is_active"):
             return {
                 "id": user["id"],

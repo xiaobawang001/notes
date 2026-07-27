@@ -101,7 +101,7 @@ POST /postgre/v1/auth/register
 }
 ```
 
-> **注意:** PostgreSQL 模式下 `user_id` 为 `SERIAL` 自增整数（从 1 开始）。
+> **注意:** PostgreSQL 模式下 `user_id` 为 `BIGINT`（由 `BIGSERIAL` 主键生成，可安全承载大整数）。
 
 **错误响应:**
 
@@ -245,7 +245,7 @@ GET /postgre/v1/notes?type=article&status=published&page=1&page_size=10
 }
 ```
 
-> **注意:** PostgreSQL 模式下 `id` 为 SERIAL 自增整数，时间格式为 ISO 8601（无时区）。
+> **注意:** PostgreSQL 模式下 `id` 为 BIGSERIAL 自增整数（BIGINT），时间格式为 ISO 8601（无时区）。
 
 ---
 
@@ -342,7 +342,7 @@ GET /postgre/v1/notes/{note_id}
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `note_id` | int | 笔记 ID（SERIAL 整数） |
+| `note_id` | int64 | 笔记 ID（BIGSERIAL 整数） |
 
 **示例：**
 ```
@@ -534,7 +534,7 @@ DELETE /postgre/v1/notes/4
 |------|------|------|
 | `token` | string | JWT access token |
 | `token_type` | string | 固定值 `"bearer"` |
-| `user_id` | int | 用户 ID（SERIAL 自增整数） |
+| `user_id` | int64 | 用户 ID（BIGSERIAL 自增整数） |
 | `username` | string | 用户名 |
 | `role` | string | `user` 或 `admin` |
 
@@ -542,13 +542,13 @@ DELETE /postgre/v1/notes/4
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `id` | int | 笔记 ID（SERIAL 自增整数） |
-| `user_id` | int | 所属用户 ID |
+| `id` | int64 | 笔记 ID（BIGSERIAL 自增整数） |
+| `user_id` | int64 | 所属用户 ID |
 | `type` | string | `folder` 或 `article` |
 | `title` | string | 标题 |
 | `slug` | string | URL 标识（文章专有） |
 | `content` | string | Markdown 正文 |
-| `parent_id` | int | 父目录 ID，0=顶级 |
+| `parent_id` | int64 | 父目录 ID，0=顶级 |
 | `status` | string | `draft` 或 `published` |
 | `pinned` | bool | 是否置顶 |
 | `sort_order` | int | 同级排序权重 |
@@ -562,11 +562,11 @@ DELETE /postgre/v1/notes/4
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `id` | int | 目录 ID |
+| `id` | int64 | 目录 ID |
 | `type` | string | `folder` |
 | `name` | string | 目录名（映射自 `title`） |
 | `slug` | string | URL 标识 |
-| `parent_id` | int | 父目录 ID |
+| `parent_id` | int64 | 父目录 ID |
 | `children` | CategoryTreeItem[] | 子目录列表 |
 
 ---
@@ -595,7 +595,7 @@ DELETE /postgre/v1/notes/4
 | 特性 | 说明 |
 |------|------|
 | 数据存储 | PostgreSQL（SQLAlchemy 2.0 async + asyncpg） |
-| ID 格式 | SERIAL 自增整数（1, 2, 3, ...） |
+| ID 格式 | BIGSERIAL 自增整数（BIGINT，1, 2, 3, ...） |
 | 时间格式 | `"YYYY-MM-DDTHH:MM:SS"`（ISO 8601，无时区） |
 | 全文搜索 | PostgreSQL `ILIKE`（不区分大小写） |
 | 写入确认 | 事务保证，INSERT/UPDATE/DELETE 实时生效 |
@@ -611,7 +611,7 @@ DELETE /postgre/v1/notes/4
 |------|-----------|-----------------|
 | 环境变量 | `DB_MODE=coze` | `DB_MODE=postgres` |
 | API 前缀 | `/coze/v1` | `/postgre/v1` |
-| user_id 格式 | 长整数（~19 位） | 自增整数（1, 2, 3...） |
+| user_id 格式 | 长整数（~19 位） | BIGINT 自增整数（1, 2, 3...） |
 | 建表 | 无需（Coze 托管） | 首次启动自动建表 |
 | 搜索 | LIKE 模糊匹配 | ILIKE 不区分大小写 |
 | 事务 | 不支持 | 完整 ACID 事务 |

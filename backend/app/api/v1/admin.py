@@ -35,11 +35,24 @@ async def require_admin_pg(
         raise HTTPException(status_code=401, detail={"code": 401, "msg": "Token 无效或已过期"})
 
     user_id = payload.get("sub")
-    if not user_id:
+    username = payload.get("username")
+    if not user_id and not username:
         raise HTTPException(status_code=401, detail={"code": 401, "msg": "Token 无效"})
 
     repo = PostgresUserRepo()
-    user = await repo.find_by_id(int(user_id))
+    user = None
+
+    # 优先按 sub 查询；sub 可转整数即按 ID 查询（PG 已升级 BIGINT）
+    if user_id is not None:
+        try:
+            uid = int(user_id)
+            user = await repo.find_by_id(uid)
+        except (TypeError, ValueError):
+            user = None
+
+    if user is None and username:
+        user = await repo.find_by_username(username)
+
     if not user or not user.get("is_active"):
         raise HTTPException(status_code=401, detail={"code": 401, "msg": "用户不存在或已禁用"})
 

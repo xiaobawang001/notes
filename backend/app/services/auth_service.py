@@ -54,10 +54,21 @@ class AuthService:
         if not payload:
             raise ValueError("Token 无效或已过期")
 
-        user_id = int(payload.get("sub", 0))
+        user_id = payload.get("sub")
         username = payload.get("username", "")
         role = payload.get("role", "user")
-        user = await self.user_repo.find_by_id(user_id)
+
+        user = None
+        if user_id is not None:
+            try:
+                uid = int(user_id)
+                user = await self.user_repo.find_by_id(uid)
+            except (TypeError, ValueError):
+                user = None
+
+        if user is None and username:
+            user = await self.user_repo.find_by_username(username)
+
         if not user:
             raise ValueError("用户不存在")
 
