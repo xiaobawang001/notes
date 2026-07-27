@@ -1,0 +1,44 @@
+/* ========== 语雀风格设计令牌 ========== */
+:root {
+  --yuque-page-bg: #f4f5f5;
+  --yuque-paper-bg: #ffffff;
+  --yuque-sidebar-bg: #ffffff;
+  --yuque-border: #e7e9e8;
+  --yuque-border-light: #eff0f0;
+  --yuque-text: #262626;
+  --yuque-text-secondary: #8a8f8d;
+  --yuque-brand: #00b96b;
+  --yuque-brand-hover: #009456;
+  --yuque-brand-soft: rgba(0, 185, 107, 0.1);
+  --yuque-code-header-bg: #eef0ef;
+  --yuque-code-header-text: #646a73;
+  --yuque-shadow-paper: 0 1px 4px rgba(0, 0, 0, 0.05), 0 4px 24px rgba(0, 0, 0, 0.04);
+  --yuque-font: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  --vp-sidebar-width: 280px;
+  --vp-nav-height: 56px;
+  --blog-content-max-width: 960px;
+  --blog-doc-font-size: 16px;
+}
+
+html.dark {
+  --yuque-page-bg: #2a2b30;
+  --yuque-paper-bg: #2e2f35;
+  --yuque-sidebar-bg: #2c2d32;
+  --yuque-border: #383940;
+  --yuque-border-light: #34353b;
+  --yuque-text: #b8b9bd;
+  --yuque-text-secondary: #76777d;
+  --yuque-brand: #3aad86;
+  --yuque-brand-hover: #349a78;
+  --yuque-brand-soft: rgba(58, 173, 134, 0.08);
+  --yuque-code-header-bg: #232429;
+  --yuque-code-header-text: #90939c;
+  --yuque-shadow-paper: 0 1px 8px rgba(0, 0, 0, 0.16);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-family: var(--yuque-font); -webkit-font-smoothing: antialiased; }
+body { background: var(--yuque-page-bg); color: var(--yuque-text); font-size: 16px; line-height: 1.6; }
+a { color: var(--yuque-brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
