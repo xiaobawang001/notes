@@ -31,5 +31,9 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# CodeBuddy
+# Vercel (local build output)
+.vercel/
+
+# CodeBuddy / IDE workspace data
 .codebuddy/
+.workbuddy/
