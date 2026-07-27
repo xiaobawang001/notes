@@ -1,27 +1,23 @@
 """认证服务：注册、登录、Token 验证"""
-from app.repositories.user_repo import UserRepository
+from app.repositories import get_user_repo
 from app.core.security import hash_password, verify_password, create_access_token
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse
 
 
 class AuthService:
-    def __init__(self):
-        self.user_repo = UserRepository()
+    def __init__(self, user_repo=None):
+        self.user_repo = user_repo if user_repo is not None else get_user_repo()
 
     async def register(self, req: RegisterRequest) -> TokenResponse:
-        """用户注册：检查用户名唯一 → 确定角色（首个用户=admin）→ bcrypt 哈希密码 → 创建用户 → 返回 Token"""
+        """用户注册：检查用户名唯一 → bcrypt 哈希密码 → 创建用户（默认 user 角色）→ 返回 Token"""
         # 检查用户名唯一性
         existing = await self.user_repo.find_by_username(req.username)
         if existing:
             raise ValueError("用户名已存在")
 
-        # 首个注册用户自动成为管理员
-        user_count = await self.user_repo.count()
-        role = "admin" if user_count == 0 else "user"
-
-        # 创建用户
+        # 所有注册用户默认 role=user，管理员由运维在 Coze 表中手动指定
         hashed = hash_password(req.password)
-        user = await self.user_repo.create(req.username, hashed, req.email, role)
+        user = await self.user_repo.create(req.username, hashed, req.email, role="user")
         if not user:
             raise RuntimeError("注册失败，请重试")
 

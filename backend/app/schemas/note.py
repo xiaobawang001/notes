@@ -9,7 +9,6 @@ class NoteCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=500, description="标题（必填）")
     slug: Optional[str] = Field(default=None, max_length=200, description="URL 标识")
     content: Optional[str] = Field(default=None, description="Markdown 正文")
-    ai_summary: Optional[str] = Field(default=None, description="AI 摘要")
     parent_id: int = Field(default=0, description="父级笔记 ID，0=顶级")
     status: str = Field(default="published", pattern="^(draft|published)$", description="状态")
     pinned: bool = Field(default=False, description="是否置顶")
@@ -22,7 +21,6 @@ class NoteUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=500)
     slug: Optional[str] = Field(default=None, max_length=200)
     content: Optional[str] = None
-    ai_summary: Optional[str] = None
     parent_id: Optional[int] = None
     status: Optional[str] = Field(default=None, pattern="^(draft|published)$")
     pinned: Optional[bool] = None
@@ -37,7 +35,6 @@ class NoteItem(BaseModel):
     title: str = ""
     slug: str = ""
     content: str = ""
-    ai_summary: str = ""
     parent_id: int = 0
     status: str = "draft"
     pinned: bool = False

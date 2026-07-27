@@ -1,11 +1,11 @@
 """目录树服务：构建 folder + article 的嵌套树形结构"""
 from collections import defaultdict
-from app.repositories.note_repo import NoteRepository
+from app.repositories import get_note_repo
 
 
 class TreeService:
-    def __init__(self):
-        self.note_repo = NoteRepository()
+    def __init__(self, note_repo=None):
+        self.note_repo = note_repo if note_repo is not None else get_note_repo()
 
     async def build_tree(self, user_id: int | None = None) -> list[dict]:
         """构建完整目录树（folder 在前 + article 在后，按 sort_order/pinned/updated_at 排序）"""

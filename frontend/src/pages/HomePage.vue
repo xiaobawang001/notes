@@ -82,7 +82,7 @@ onMounted(async () => {
               @click="router.push(`/article/${a.id}`)"
             >
               <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
-              <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.ai_summary || a.content?.slice(0, 200) }}</p>
+              <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
               <div class="flex items-center gap-2 mt-3 text-12px text-secondary">
                 <span>{{ a.word_count }} 字</span>
                 <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>

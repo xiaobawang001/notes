@@ -1,23 +1,31 @@
-"""FastAPI 依赖注入：从请求中提取当前用户"""
-from fastapi import Depends, HTTPException, status
+"""FastAPI 依赖注入：从请求中提取当前用户、获取仓库实例"""
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.security import verify_access_token
-from app.core.coze_client import get_coze_client, CozeApiClient
-from app.infrastructure.coze.filters import condition, and_
 from app.core.config import get_settings
+from app.repositories import get_user_repo, get_note_repo
 
 settings = get_settings()
 security_scheme = HTTPBearer(auto_error=False)
 
 
+def get_user_repo_dep() -> "CozeUserRepo | PostgresUserRepo":
+    """仓库工厂依赖：根据 URL 前缀返回对应实现"""
+    return get_user_repo()
+
+
+def get_note_repo_dep() -> "CozeNoteRepo | PostgresNoteRepo":
+    """仓库工厂依赖：根据 URL 前缀返回对应实现"""
+    return get_note_repo()
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
-    coze: CozeApiClient = Depends(get_coze_client),
-) -> dict:
-    """从 JWT Token 中提取当前用户信息，返回用户字典 {id, username}
+) -> dict | None:
+    """从 JWT Token 中提取当前用户信息
 
-    如果 Token 无效或用户不存在，返回 None。
+    如果 Token 无效或用户不存在/已禁用，返回 None。
     使用 auto_error=False 允许公开接口不强制要求认证。
     """
     if credentials is None:
@@ -31,27 +39,17 @@ async def get_current_user(
     if not user_id:
         return None
 
-    # 查询用户是否存在且未禁用
+    # 通过仓库查询用户（兼容 Coze / PostgreSQL）
     try:
-        data = await coze.query(
-            settings.COZE_USERS_DATABASE_ID,
-            {
-                "filter": and_(
-                    condition("id", "=", user_id),
-                    condition("is_active", "=", "1"),
-                ),
-                "page_size": 1,
-            },
-        )
-        records = data.get("records") or []
-        if not records:
-            return None
-        fields = records[0].get("fields") or records[0]
-        return {
-            "id": int(records[0].get("id") or 0),
-            "username": fields.get("username", ""),
-            "role": fields.get("role", "user"),
-        }
+        repo = get_user_repo()
+        user = await repo.find_by_id(int(user_id))
+        if user and user.get("is_active"):
+            return {
+                "id": user["id"],
+                "username": user["username"],
+                "role": user.get("role", "user"),
+            }
+        return None
     except Exception:
         return None
 

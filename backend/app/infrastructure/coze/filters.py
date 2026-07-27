@@ -50,12 +50,14 @@ def or_(*conds: "CozeCondition | CozeFilter") -> CozeFilter:
     return CozeFilter(logic=CozeLogic.OR, conditions=list(conds))
 
 
-def empty_or_null(field: str) -> CozeFilter:
-    """构建"为空或 NULL"的 OR 条件"""
-    return or_(
-        condition(field, CozeOperation.EQUAL, ""),
-        condition(field, CozeOperation.IS_NULL),
-    )
+def empty_or_null(field: str) -> CozeCondition:
+    """匹配"空"条件
+
+    Coze 查询 API 不支持 OR 逻辑组合（会返回 500），也不支持 `= ""`
+    空字符串相等（同样 500）。按 schema 约定 parent_id=0 即顶级根节点/空值，
+    故对"空"统一用 `= "0"` 精确匹配。
+    """
+    return condition(field, CozeOperation.EQUAL, "0")
 
 
 def not_deleted_filter() -> CozeCondition:

@@ -1,11 +1,11 @@
 """笔记服务：权限校验 + CRUD 业务逻辑"""
-from app.repositories.note_repo import NoteRepository
+from app.repositories import get_note_repo
 from app.schemas.note import NoteCreate, NoteUpdate
 
 
 class NoteService:
-    def __init__(self):
-        self.note_repo = NoteRepository()
+    def __init__(self, note_repo=None):
+        self.note_repo = note_repo if note_repo is not None else get_note_repo()
 
     async def list_notes(
         self,
@@ -27,7 +27,6 @@ class NoteService:
             page_size=page_size,
             page_num=page,
         )
-        # total 简化处理
         return items, len(items)
 
     async def get_public_list(

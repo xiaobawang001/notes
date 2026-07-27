@@ -1,24 +1,23 @@
 """安全工具：JWT Token 生成与验证、bcrypt 密码哈希"""
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import jwt, JWTError
-from passlib.context import CryptContext
 
 from app.core.config import get_settings
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# ── 密码哈希 ──
+# ── 密码哈希（直接使用 bcrypt，避免 passlib 兼容问题）──
 def hash_password(password: str) -> str:
     """对明文密码做 bcrypt 哈希，返回哈希后字符串"""
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """校验明文密码与 bcrypt 哈希是否匹配"""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 # ── JWT Token ──

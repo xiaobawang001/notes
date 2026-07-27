@@ -58,6 +58,7 @@ def coze_to_user(record: dict) -> dict:
         "created_at": fields.get("created_at", ""),
         "is_active": ACTIVE_MAP_REV.get(fields.get("is_active", "1"), True),
         "role": fields.get("role", "user"),
+        "pg_id": fields.get("pg_id", ""),
     }
 
 
@@ -83,8 +84,6 @@ def note_to_insert_fields(dto: dict) -> dict[str, str]:
         fields["slug"] = dto["slug"]
     if content:
         fields["content"] = content
-    if dto.get("ai_summary"):
-        fields["ai_summary"] = dto["ai_summary"]
     return fields
 
 
@@ -101,8 +100,6 @@ def note_to_update_fields(dto: dict) -> list[dict]:
         content = dto["content"] or ""
         _add("content", content)
         _add("word_count", len(content))
-    if "ai_summary" in dto:
-        _add("ai_summary", dto["ai_summary"] or "")
     if "slug" in dto:
         _add("slug", dto["slug"] or "")
     if "parent_id" in dto:
@@ -141,7 +138,6 @@ def coze_to_note(record: dict) -> dict:
         "title": fields.get("title", ""),
         "slug": fields.get("slug", ""),
         "content": fields.get("content", ""),
-        "ai_summary": fields.get("ai_summary", ""),
         "parent_id": int(fields.get("parent_id") or 0),
         "status": STATUS_MAP_REV.get(fields.get("status", ""), "draft"),
         "pinned": PINNED_MAP_REV.get(fields.get("pinned", "0"), False),
@@ -151,34 +147,6 @@ def coze_to_note(record: dict) -> dict:
         "deleted_at": fields.get("deleted_at"),
         "created_at": fields.get("created_at", ""),
         "updated_at": fields.get("updated_at", ""),
+        "pg_id": fields.get("pg_id", ""),
     }
 
-
-# ── Settings 映射 ──
-
-def setting_to_insert_fields(key: str, value: str) -> dict[str, str]:
-    """创建设置：构建插入字段"""
-    return {
-        "key": key,
-        "value": value,
-        "updated_at": now_iso(),
-    }
-
-
-def setting_to_update_fields(key: str, value: str) -> list[dict]:
-    """更新设置：构建更新字段列表"""
-    return [
-        {"field_name": "value", "value": value},
-        {"field_name": "updated_at", "value": now_iso()},
-    ]
-
-
-def coze_to_setting(record: dict) -> dict:
-    """Coze 记录 → 设置字典"""
-    fields = record.get("fields") or record
-    return {
-        "id": int(record.get("id") or 0),
-        "key": fields.get("key", ""),
-        "value": fields.get("value", ""),
-        "updated_at": fields.get("updated_at", ""),
-    }

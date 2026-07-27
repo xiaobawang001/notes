@@ -1,7 +1,7 @@
 """Coze API HTTP 客户端：封装 Coze 多维表格 REST API"""
 import json
 import time
-from typing import Optional, Any
+from typing import Optional
 
 import httpx
 
@@ -17,12 +17,12 @@ class CozeApiError(Exception):
 
 
 class CozeApiClient:
-    """异步 Coze API 客户端，用于操作 Coze 多维表格（users / notes / settings）"""
+    """异步 Coze API 客户端，用于操作 Coze 多维表格（users / notes）"""
 
-    def __init__(self, token: str = "", base_url: str = ""):
+    def __init__(self):
         settings = get_settings()
-        self._token = token or settings.COZE_TOKEN
-        self._base_url = (base_url or settings.COZE_BASE_URL).rstrip("/")
+        self._token = settings.COZE_TOKEN
+        self._base_url = settings.COZE_BASE_URL.rstrip("/")
         self._logging = settings.COZE_API_LOGGING
         self._http = httpx.AsyncClient(timeout=30.0)
 
@@ -88,14 +88,3 @@ async def get_coze_client() -> CozeApiClient:
     if coze_client is None:
         coze_client = CozeApiClient()
     return coze_client
-
-
-def reset_coze_client():
-    """重置全局客户端单例（配置变更后调用）"""
-    global coze_client
-    coze_client = None
-
-
-def create_test_client(token: str, base_url: str) -> CozeApiClient:
-    """创建临时客户端用于测试凭据（不依赖全局 Settings）"""
-    return CozeApiClient(token=token, base_url=base_url)

@@ -46,7 +46,7 @@ onMounted(() => { if (query.value) doSearch() })
             @click="router.push(`/article/${r.id}`)"
           >
             <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ r.title }}</h2>
-            <p class="text-14px text-secondary line-clamp-2 m-0" v-if="r.ai_summary">{{ r.ai_summary }}</p>
+            <p class="text-14px text-secondary line-clamp-2 m-0">{{ r.content?.slice(0, 200) }}</p>
           </article>
         </div>
       </NSpin>

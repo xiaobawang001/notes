@@ -5,7 +5,6 @@ export interface Note {
   title: string
   slug: string
   content: string
-  ai_summary: string
   parent_id: number
   status: 'draft' | 'published'
   pinned: boolean
