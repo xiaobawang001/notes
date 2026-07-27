@@ -22,12 +22,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 # ── JWT Token ──
-def create_access_token(user_id: int, username: str) -> str:
-    """生成 JWT access token，载荷包含 user_id + username"""
+def create_access_token(user_id: int, username: str, role: str = "user") -> str:
+    """生成 JWT access token，载荷包含 user_id + username + role"""
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),
         "username": username,
+        "role": role,
         "exp": expire,
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)

@@ -25,6 +25,7 @@ class User(Base):
     email = Column(String(200), nullable=True, comment="邮箱")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="注册时间")
     is_active = Column(Integer, default=1, index=True, comment="0=禁用, 1=正常")
+    role = Column(String(20), default="user", comment="user=普通用户, admin=管理员")
 
     # 关联
     notes = relationship("Note", back_populates="user")

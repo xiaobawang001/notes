@@ -26,8 +26,10 @@
 | email | String | — | 否 | — | 用户邮箱 |
 | created_at | Time | — | 是 | — | 注册时间，ISO 8601 格式 |
 | is_active | Integer | **是** | 是 | 1 | 账户状态：`1`=正常 / `0`=禁用 |
+| role | String | — | 是 | "user" | 角色：`user`=普通用户 / `admin`=管理员 |
 
 > **说明**：Coze 不支持 UNIQUE 约束，`username` 唯一性由应用层在注册时检查。
+> 系统初始化时（users 表为空），第一个注册用户自动获得 `admin` 角色。
 
 ### 枚举映射
 
@@ -35,6 +37,8 @@
 |------|----|------|
 | is_active | `0` | 已禁用（不可登录） |
 | is_active | `1` | 正常（可登录） |
+| role | `"user"` | 普通用户 |
+| role | `"admin"` | 管理员（可配置系统参数） |
 
 ### 接口传值
 
@@ -46,6 +50,7 @@ password_hash:"$2b$12$LJ3..."
 email:        "zhang@example.com"
 created_at:   "2026-07-27T10:00:00.000Z"
 is_active:    "1"
+role:         "user"        -- 或 "admin"
 ```
 
 ---
@@ -152,7 +157,44 @@ updated_at:   "2026-07-27T10:00:00.000Z"
 
 ---
 
-## 三、在 Coze 平台创建表
+## 三、settings（系统配置表）
+
+管理员可在线更新的配置项，存储于 Coze 多维表格。
+
+### Coze 自带默认字段
+
+| 字段名 | 描述 | 类型 |
+|--------|------|------|
+| id | 数据的唯一标识（主键） | Integer |
+| sys_platform | 数据产生或使用的渠道 | String |
+| uuid | 用户唯一标识，由系统生成 | String |
+| bstudio_create_time | 数据插入的时间 | Time |
+
+### 业务字段
+
+| 字段名 | Coze 字段类型 | 设为索引 | 是否必填 | 默认值 | 说明 |
+|--------|-------------|---------|---------|--------|------|
+| key | String | **是** | 是 | — | 配置键名（如 "COZE_TOKEN"） |
+| value | String | — | 是 | — | 配置值 |
+| updated_at | Time | — | 是 | — | 更新时间 |
+
+### 预置键名
+
+| key | 说明 |
+|-----|------|
+| COZE_TOKEN | Coze 个人访问令牌（每月更新） |
+| COZE_BASE_URL | Coze API 地址 |
+| COZE_USERS_DATABASE_ID | users 表 database ID |
+| COZE_NOTES_DATABASE_ID | notes 表 database ID |
+
+### 应用层约束
+1. **key 唯一性**：同 key 只能有一条记录，更新时 upsert
+2. **管理员专属**：只有 role=admin 的用户可读写此表
+3. **配置刷新**：更新后立即刷新内存缓存，不重启服务
+
+---
+
+## 四、在 Coze 平台创建表
 
 ### 操作步骤
 
@@ -172,6 +214,7 @@ updated_at:   "2026-07-27T10:00:00.000Z"
 | email | 文本（String） | 否 |
 | created_at | 时间（Time） | 否 |
 | is_active | 整数（Integer） | **是** |
+| role | 文本（String） | 否 |
 
 ### notes 表
 
@@ -196,13 +239,26 @@ updated_at:   "2026-07-27T10:00:00.000Z"
 | created_at | 时间（Time） | 否 |
 | updated_at | 时间（Time） | 否 |
 
+### settings 表
+
+- 表格名称：`settings`
+- 字段列表：
+
+| 字段名 | 类型 | 设为索引 |
+|--------|------|---------|
+| key | 文本（String） | **是** |
+| value | 文本（String） | 否 |
+| updated_at | 时间（Time） | 否 |
+
 ### 获取 Database ID
 
 创建完成后，进入表格 → 右上角「...」→「查看 API」→ 复制 URL 中的 database ID。
 
+> **注意**：settings 表的 database ID 需通过环境变量 `COZE_SETTINGS_DATABASE_ID` 或管理员后台配置。
+
 ---
 
-## 四、数据迁移（从 articles 到 notes）
+## 五、数据迁移（从 articles 到 notes）
 
 ### 字段变更对照
 
@@ -235,7 +291,7 @@ updated_at:   "2026-07-27T10:00:00.000Z"
 
 ---
 
-## 五、应用层约束
+## 六、应用层约束
 
 Coze 不支持外键和复杂约束，以下逻辑需在代码中处理：
 
@@ -251,7 +307,7 @@ Coze 不支持外键和复杂约束，以下逻辑需在代码中处理：
 
 ---
 
-## 六、主要查询场景
+## 七、主要查询场景
 
 | 功能 | 查询条件 |
 |------|---------|
@@ -263,7 +319,7 @@ Coze 不支持外键和复杂约束，以下逻辑需在代码中处理：
 
 ---
 
-## 七、环境变量
+## 八、环境变量
 
 ```env
 # Coze API
@@ -271,6 +327,7 @@ COZE_TOKEN=你的 Coze 个人访问令牌
 COZE_BASE_URL=https://api.coze.cn
 COZE_USERS_DATABASE_ID=users 表的数据库 ID
 COZE_NOTES_DATABASE_ID=notes 表的数据库 ID
+COZE_SETTINGS_DATABASE_ID=settings 表的数据库 ID
 
 # JWT
 SECRET_KEY=你的 JWT 密钥（至少 32 字符）

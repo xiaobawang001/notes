@@ -16,6 +16,7 @@ PINNED_MAP = {False: "0", True: "1"}
 PINNED_MAP_REV = {"0": False, "1": True}
 DELETED_MAP = {False: "0", True: "1"}
 DELETED_MAP_REV = {"0": False, "1": True}
+ROLE_MAP = {"user": "user", "admin": "admin"}
 ACTIVE_MAP = {False: "0", True: "1"}
 ACTIVE_MAP_REV = {"0": False, "1": True}
 
@@ -31,6 +32,7 @@ def user_to_insert_fields(
     username: str,
     password_hash: str,
     email: Optional[str] = None,
+    role: str = "user",
 ) -> dict[str, str]:
     """用户注册：构建插入字段"""
     fields: dict[str, str] = {
@@ -38,6 +40,7 @@ def user_to_insert_fields(
         "password_hash": password_hash,
         "created_at": now_iso(),
         "is_active": "1",
+        "role": role,
     }
     if email:
         fields["email"] = email
@@ -54,6 +57,7 @@ def coze_to_user(record: dict) -> dict:
         "email": fields.get("email", ""),
         "created_at": fields.get("created_at", ""),
         "is_active": ACTIVE_MAP_REV.get(fields.get("is_active", "1"), True),
+        "role": fields.get("role", "user"),
     }
 
 
@@ -146,5 +150,35 @@ def coze_to_note(record: dict) -> dict:
         "is_deleted": DELETED_MAP_REV.get(fields.get("is_deleted", "0"), False),
         "deleted_at": fields.get("deleted_at"),
         "created_at": fields.get("created_at", ""),
+        "updated_at": fields.get("updated_at", ""),
+    }
+
+
+# ── Settings 映射 ──
+
+def setting_to_insert_fields(key: str, value: str) -> dict[str, str]:
+    """创建设置：构建插入字段"""
+    return {
+        "key": key,
+        "value": value,
+        "updated_at": now_iso(),
+    }
+
+
+def setting_to_update_fields(key: str, value: str) -> list[dict]:
+    """更新设置：构建更新字段列表"""
+    return [
+        {"field_name": "value", "value": value},
+        {"field_name": "updated_at", "value": now_iso()},
+    ]
+
+
+def coze_to_setting(record: dict) -> dict:
+    """Coze 记录 → 设置字典"""
+    fields = record.get("fields") or record
+    return {
+        "id": int(record.get("id") or 0),
+        "key": fields.get("key", ""),
+        "value": fields.get("value", ""),
         "updated_at": fields.get("updated_at", ""),
     }

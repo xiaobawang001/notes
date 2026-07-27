@@ -50,6 +50,7 @@ async def get_current_user(
         return {
             "id": int(records[0].get("id") or 0),
             "username": fields.get("username", ""),
+            "role": fields.get("role", "user"),
         }
     except Exception:
         return None
@@ -63,5 +64,17 @@ async def require_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": 401, "msg": "请先登录"},
+        )
+    return user
+
+
+async def require_admin(
+    user: dict = Depends(require_current_user),
+) -> dict:
+    """强制要求管理员角色，非管理员返回 403"""
+    if user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": 403, "msg": "需要管理员权限"},
         )
     return user

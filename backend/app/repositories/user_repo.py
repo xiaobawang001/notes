@@ -6,7 +6,7 @@ from app.infrastructure.coze.mappers import user_to_insert_fields, coze_to_user
 
 settings = get_settings()
 
-USER_FIELDS = ["id", "username", "password_hash", "email", "created_at", "is_active"]
+USER_FIELDS = ["id", "username", "password_hash", "email", "created_at", "is_active", "role"]
 
 
 class UserRepository:
@@ -50,13 +50,26 @@ class UserRepository:
         return coze_to_user(records[0]) if records else None
 
     async def create(
-        self, username: str, password_hash: str, email: str | None = None
+        self, username: str, password_hash: str, email: str | None = None, role: str = "user"
     ) -> dict | None:
         """创建新用户，返回创建后的用户信息"""
         client = await self._client()
-        fields = user_to_insert_fields(username, password_hash, email)
+        fields = user_to_insert_fields(username, password_hash, email, role)
         result = await client.insert(self.db_id, {"insert_rows": [fields]})
         if result.get("affected_rows", 0) == 0:
             return None
         # 插入后回查（Coze 同步插入不返回完整记录）
         return await self.find_by_username(username)
+
+    async def count(self) -> int:
+        """统计用户总数（用于判断是否首个注册）"""
+        client = await self._client()
+        from app.infrastructure.coze.filters import to_filter_dict
+        data = await client.query(
+            self.db_id,
+            {
+                "select_fields": {"field_names": ["id"]},
+                "page_size": 1,
+            },
+        )
+        return int(data.get("total_count") or 0)

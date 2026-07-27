@@ -21,6 +21,7 @@ class TokenResponse(BaseModel):
     token_type: str = Field(default="bearer")
     user_id: int = Field(description="用户 ID")
     username: str = Field(description="用户名")
+    role: str = Field(description="角色：user / admin")
 
 
 class RefreshRequest(BaseModel):

@@ -27,7 +27,7 @@ const router = createRouter({
       path: '/admin',
       name: 'Admin',
       component: () => import('~/pages/AdminPage.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/search',
@@ -37,14 +37,29 @@ const router = createRouter({
   ],
 })
 
-// 路由守卫：未登录跳转 /login
+// 路由守卫：未登录跳转 /login，非管理员访问 admin 页面跳转首页
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
+
   if (to.meta.requiresAuth && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
-  } else {
-    next()
+    return
   }
+
+  if (to.meta.requiresAdmin) {
+    try {
+      const payload = JSON.parse(atob(token!.split('.')[1]))
+      if (payload.role !== 'admin') {
+        next({ name: 'Home' })
+        return
+      }
+    } catch {
+      next({ name: 'Login' })
+      return
+    }
+  }
+
+  next()
 })
 
 export default router
