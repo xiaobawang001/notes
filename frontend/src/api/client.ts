@@ -1,12 +1,30 @@
 import axios from 'axios'
 
-// 默认使用 PostgreSQL 后端前缀（可通过 VITE_API_PREFIX 覆盖）
-const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/postgre/v1'
+// 当前 API 前缀（默认 PostgreSQL，可通过 VITE_API_PREFIX 覆盖）
+let currentPrefix = import.meta.env.VITE_API_PREFIX || '/postgre/v1'
+
+// 后端名称 → 前缀映射
+const PREFIX_MAP: Record<string, string> = {
+  postgres: '/postgre/v1',
+  coze: '/coze/v1',
+}
 
 const api = axios.create({
-  baseURL: API_PREFIX,
+  baseURL: currentPrefix,
   timeout: 15000,
 })
+
+/** 运行时切换 API 前缀（配合 switch-backend 调用后自动更新） */
+export function setApiPrefix(backend: string | null) {
+  currentPrefix = backend && PREFIX_MAP[backend] ? PREFIX_MAP[backend] : '/postgre/v1'
+  api.defaults.baseURL = currentPrefix
+  console.log(`[API] 已切换到: ${currentPrefix}`)
+}
+
+/** 获取当前 API 前缀 */
+export function getApiPrefix(): string {
+  return currentPrefix
+}
 
 // 请求拦截器：自动注入 JWT Token
 api.interceptors.request.use((config) => {

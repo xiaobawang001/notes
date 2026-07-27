@@ -2,7 +2,7 @@
 import { ref, onMounted, h } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { getNotes, createNote, updateNote, deleteNote, getCategories } from '~/api/notes'
-import api from '~/api/client'
+import api, { setApiPrefix } from '~/api/client'
 import type { Note } from '~/types/note'
 import { NButton, NModal, NInput, NDataTable, NSpace, NSelect, NPopconfirm, NCard, NTag, NSwitch, useMessage } from 'naive-ui'
 
@@ -124,8 +124,10 @@ async function toggleBackend(backend: string) {
   try {
     const res = await api.post('/admin/switch-backend', { backend })
     backendStatus.value = res.data
-    activeBackend.value = res.data?.active_backend || 'postgres'
-    message.success('切换成功')
+    const active = res.data?.active_backend || 'postgres'
+    activeBackend.value = active
+    setApiPrefix(active)
+    message.success(`已切换至 ${active === 'postgres' ? 'PostgreSQL' : 'Coze'}`)
   } catch (e: any) {
     message.error(e?.msg || '切换失败')
   } finally { adminLoading.value = false }
@@ -135,7 +137,9 @@ async function loadBackendStatus() {
   try {
     const res = await api.get('/admin/status')
     backendStatus.value = res.data
-    activeBackend.value = res.data?.active_backend || 'postgres'
+    const active = res.data?.active_backend || 'postgres'
+    activeBackend.value = active
+    setApiPrefix(active)
   } catch { /* ignore */ }
 }
 
