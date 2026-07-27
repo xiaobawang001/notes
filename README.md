@@ -71,7 +71,7 @@ SECRET_KEY=你的 JWT 密钥（至少 32 字符）
 - `users` — 用户表（username / password_hash / is_active）
 - `notes` — 笔记表（user_id / type / title / slug / content / parent_id / status / ...）
 
-详细字段及创建步骤见 `backend/docs/coze-schema.md`。
+详细字段及创建步骤见 `backend/docs/db/coze-schema.md`。
 
 ## 开发
 
@@ -91,17 +91,17 @@ npm install
 npm run dev
 ```
 
-前端开发服务器运行在 `http://localhost:3000`，API 请求自动代理到后端 `localhost:8000`。
+前端开发服务器运行在 `http://localhost:3000`，`/postgre/*` 与 `/coze/*` 请求会自动代理到后端 `localhost:8000`。
 
 ## 部署到 Vercel
 
 1. 将代码推送到 GitHub
 2. 在 Vercel 导入项目（Monorepo，根目录为项目根）
 3. 配置环境变量（见上方环境变量列表）
-4. `vercel.json` 自动处理路由：`/api/v1/*` → 后端，其余 → 前端
+4. `vercel.json` 自动处理路由：`/postgre/v1/*` 与 `/coze/v1/*` → 后端，其余 → 前端
 
 ## 文档
 
-- [Coze 表结构设计](backend/docs/coze-schema.md)
+- [Coze 表结构设计](backend/docs/db/coze-schema.md)
 - [Coze API 文档](backend/docs/)
 - [项目架构规则](.codebuddy/rules/项目架构.mdc)

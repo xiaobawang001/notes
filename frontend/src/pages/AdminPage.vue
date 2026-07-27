@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import { getNotes, createNote, updateNote, deleteNote, getCategories } from '~/api/notes'
-import { getSettings, updateSettings, testConnection } from '~/api/settings'
-import type { Note, TreeNode } from '~/types/note'
-import type { SettingsStatus } from '~/api/settings'
-import { NButton, NModal, NInput, NDataTable, NSpace, NSelect, NPopconfirm, NTabs, NTabPane, NSpin, useMessage } from 'naive-ui'
+import api from '~/api/client'
+import type { Note } from '~/types/note'
+import { NButton, NModal, NInput, NDataTable, NSpace, NSelect, NPopconfirm, NCard, NTag, NSwitch, useMessage } from 'naive-ui'
 
-const router = useRouter()
 const auth = useAuthStore()
 const message = useMessage()
 
-// ── 笔记管理 ──
+// ── 笔记管理状态 ──
 const notes = ref<Note[]>([])
-const tree = ref<TreeNode[]>([])
+const tree = ref<any[]>([])
 const loading = ref(false)
 const showModal = ref(false)
 const editNote = ref<Note | null>(null)
@@ -24,6 +21,14 @@ const formType = ref<'article' | 'folder'>('article')
 const formParentId = ref<number>(0)
 const formStatus = ref<'published' | 'draft'>('published')
 const formSlug = ref('')
+
+// ── 管理功能状态 ──
+const adminLoading = ref(false)
+const pgStatus = ref<{ ok: boolean; message: string } | null>(null)
+const cozeStatus = ref<{ ok: boolean; message: string } | null>(null)
+const syncResult = ref<any>(null)
+const backendStatus = ref<any>(null)
+const activeBackend = ref('postgres')
 
 async function load() {
   loading.value = true
@@ -70,7 +75,71 @@ async function handleDelete(id: number) {
   catch (e: any) { message.error(e?.msg || '删除失败') }
 }
 
-onMounted(load)
+// ── 管理功能 ──
+
+async function testPg() {
+  adminLoading.value = true
+  pgStatus.value = null
+  try {
+    const res = await api.post('/admin/test-pg')
+    pgStatus.value = res.data
+    message.success(res.data?.ok ? 'PG 连接正常' : 'PG 连接失败')
+  } catch (e: any) {
+    pgStatus.value = { ok: false, message: e?.msg || '请求失败' }
+    message.error('PG 连接测试失败')
+  } finally { adminLoading.value = false }
+}
+
+async function testCoze() {
+  adminLoading.value = true
+  cozeStatus.value = null
+  try {
+    const res = await api.post('/admin/test-coze')
+    cozeStatus.value = res.data
+    message.success(res.data?.ok ? 'Coze 连接正常' : 'Coze 连接失败')
+  } catch (e: any) {
+    cozeStatus.value = { ok: false, message: e?.msg || '请求失败' }
+    message.error('Coze 连接测试失败')
+  } finally { adminLoading.value = false }
+}
+
+async function doSync() {
+  adminLoading.value = true
+  syncResult.value = null
+  try {
+    const res = await api.post('/admin/sync')
+    syncResult.value = res.data
+    if (res.data?.has_changes) {
+      message.success('同步完成，有数据变更')
+    } else {
+      message.info('数据一致，无需同步')
+    }
+  } catch (e: any) {
+    message.error(e?.msg || '同步失败')
+  } finally { adminLoading.value = false }
+}
+
+async function toggleBackend(backend: string) {
+  adminLoading.value = true
+  try {
+    const res = await api.post('/admin/switch-backend', { backend })
+    backendStatus.value = res.data
+    activeBackend.value = res.data?.active_backend || 'postgres'
+    message.success('切换成功')
+  } catch (e: any) {
+    message.error(e?.msg || '切换失败')
+  } finally { adminLoading.value = false }
+}
+
+async function loadBackendStatus() {
+  try {
+    const res = await api.get('/admin/status')
+    backendStatus.value = res.data
+    activeBackend.value = res.data?.active_backend || 'postgres'
+  } catch { /* ignore */ }
+}
+
+onMounted(() => { load(); loadBackendStatus() })
 
 const columns = [
   { title: 'ID', key: 'id', width: 60, sorter: true },
@@ -93,77 +162,6 @@ const columns = [
     }
   },
 ]
-
-// ── 系统配置 ──
-const activeTab = ref('notes')
-const settingsLoading = ref(false)
-const settingsSaving = ref(false)
-const testing = ref(false)
-const configStatus = ref<SettingsStatus | null>(null)
-
-const configToken = ref('')
-const configBaseUrl = ref('https://api.coze.cn')
-const configUsersDbId = ref('')
-const configNotesDbId = ref('')
-const configSettingsDbId = ref('')
-
-async function loadSettings() {
-  settingsLoading.value = true
-  try {
-    const res = await getSettings()
-    configStatus.value = res.data
-    // 不自动回填完整 token（后端只返回脱敏值）
-    configBaseUrl.value = res.data.coze_base_url
-    configUsersDbId.value = res.data.coze_users_database_id
-    configNotesDbId.value = res.data.coze_notes_database_id
-    configSettingsDbId.value = res.data.coze_settings_database_id
-  } catch (e: any) {
-    message.error(e?.msg || '获取配置失败')
-  } finally { settingsLoading.value = false }
-}
-
-async function handleTestConnection() {
-  if (!configToken.value) { message.warning('请先输入 Coze Token'); return }
-  testing.value = true
-  try {
-    const res = await testConnection({
-      coze_token: configToken.value,
-      coze_base_url: configBaseUrl.value,
-      coze_users_database_id: configUsersDbId.value,
-    })
-    if (res.data.success) {
-      message.success('连接成功！凭据有效')
-    } else {
-      message.error(res.data.message || '连接失败')
-    }
-  } catch (e: any) {
-    message.error(e?.msg || '测试连接失败')
-  } finally { testing.value = false }
-}
-
-async function handleSaveSettings() {
-  if (!configToken.value) { message.warning('请输入 Coze Token'); return }
-  settingsSaving.value = true
-  try {
-    await updateSettings({
-      coze_token: configToken.value,
-      coze_base_url: configBaseUrl.value,
-      coze_users_database_id: configUsersDbId.value,
-      coze_notes_database_id: configNotesDbId.value,
-      coze_settings_database_id: configSettingsDbId.value,
-    })
-    message.success('配置已保存并生效')
-    await loadSettings()
-  } catch (e: any) {
-    message.error(e?.msg || '保存配置失败')
-  } finally { settingsSaving.value = false }
-}
-
-function onTabChange(tab: string) {
-  if (tab === 'settings' && !configStatus.value) {
-    loadSettings()
-  }
-}
 </script>
 
 <template>
@@ -176,99 +174,75 @@ function onTabChange(tab: string) {
     </header>
 
     <div class="max-w-[1200px] mx-auto p-6">
-      <!-- 顶部 Tab 切换 -->
-      <NTabs v-model:value="activeTab" type="line" @update:value="onTabChange">
-        <!-- ========== 笔记管理 Tab ========== -->
-        <NTabPane name="notes" tab="笔记管理">
-          <div class="flex items-center gap-3 mb-4 mt-2">
-            <h1 class="text-xl font-bold text-main m-0">笔记管理</h1>
-            <div class="flex-1" />
-            <NButton type="primary" @click="openCreate('article')">+ 新建文章</NButton>
-            <NButton @click="openCreate('folder')">+ 新建目录</NButton>
+
+      <!-- 系统管理面板 -->
+      <NCard title="系统管理" class="mb-6!">
+        <div class="grid grid-cols-2 gap-4">
+          <!-- PostgreSQL -->
+          <div class="p-4 rounded-lg bg-[#f0f9eb] dark:bg-[#1e2e1a]">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-sm">PostgreSQL 连接</span>
+              <NTag :type="pgStatus?.ok ? 'success' : 'error'" size="small">
+                {{ pgStatus ? (pgStatus.ok ? '正常' : '异常') : '未检测' }}
+              </NTag>
+            </div>
+            <p v-if="pgStatus" class="text-12px text-secondary">{{ pgStatus.message }}</p>
+            <NButton size="small" :loading="adminLoading" @click="testPg" class="mt-2">测试连接</NButton>
           </div>
 
-          <div class="paper! p-4">
-            <NDataTable :columns="columns" :data="notes" :loading="loading" :pagination="{ pageSize: 20 }" size="small" />
+          <!-- Coze -->
+          <div class="p-4 rounded-lg bg-[#ecf5ff] dark:bg-[#1a2332]">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-sm">Coze API 连接</span>
+              <NTag :type="cozeStatus?.ok ? 'success' : 'error'" size="small">
+                {{ cozeStatus ? (cozeStatus.ok ? '正常' : '异常') : '未检测' }}
+              </NTag>
+            </div>
+            <p v-if="cozeStatus" class="text-12px text-secondary">{{ cozeStatus.message }}</p>
+            <NButton size="small" :loading="adminLoading" @click="testCoze" class="mt-2">测试连接</NButton>
           </div>
-        </NTabPane>
 
-        <!-- ========== 系统配置 Tab ========== -->
-        <NTabPane name="settings" tab="系统配置">
-          <div class="mt-2">
-            <h1 class="text-xl font-bold text-main mb-1">系统配置</h1>
-            <p class="text-sm text-secondary mb-5">Coze API 密钥每月自动更新，管理员可在此重新配置凭据。</p>
-
-            <NSpin :show="settingsLoading">
-              <div class="paper! p-6 max-w-[640px]">
-                <!-- 连接状态 -->
-                <div class="flex items-center gap-2 mb-5 pb-4 border-b border-[#e7e9e8] dark:border-[#383940]">
-                  <span class="text-sm text-secondary">当前连接状态：</span>
-                  <span v-if="configStatus?.connection_ok" class="text-sm text-green-600 font-medium">● 已连接</span>
-                  <span v-else class="text-sm text-red-500 font-medium">● 未连接</span>
-                </div>
-
-                <!-- Coze Token -->
-                <div class="mb-4">
-                  <label class="block text-sm font-medium text-main mb-1.5">
-                    Coze Token
-                    <span class="text-red-500 ml-0.5">*</span>
-                  </label>
-                  <NInput
-                    v-model:value="configToken"
-                    type="password"
-                    show-password-on="click"
-                    :placeholder="configStatus?.coze_token ? `当前: ${configStatus.coze_token}` : '请输入 Coze 个人访问令牌'"
-                  />
-                  <span class="text-xs text-secondary mt-1 block">
-                    每月自动更新，从 Coze 控制台 → 个人访问令牌 获取
-                  </span>
-                </div>
-
-                <!-- Coze Base URL -->
-                <div class="mb-4">
-                  <label class="block text-sm font-medium text-main mb-1.5">Coze API 地址</label>
-                  <NInput v-model:value="configBaseUrl" placeholder="https://api.coze.cn" />
-                </div>
-
-                <!-- Users Database ID -->
-                <div class="mb-4">
-                  <label class="block text-sm font-medium text-main mb-1.5">Users 表 Database ID</label>
-                  <NInput v-model:value="configUsersDbId" placeholder="users 表的数据库 ID" />
-                </div>
-
-                <!-- Notes Database ID -->
-                <div class="mb-4">
-                  <label class="block text-sm font-medium text-main mb-1.5">Notes 表 Database ID</label>
-                  <NInput v-model:value="configNotesDbId" placeholder="notes 表的数据库 ID" />
-                </div>
-
-                <!-- Settings Database ID -->
-                <div class="mb-5">
-                  <label class="block text-sm font-medium text-main mb-1.5">Settings 表 Database ID</label>
-                  <NInput v-model:value="configSettingsDbId" placeholder="settings 表的数据库 ID" />
-                </div>
-
-                <!-- 操作按钮 -->
-                <div class="flex gap-3">
-                  <NButton type="primary" :loading="settingsSaving" @click="handleSaveSettings">
-                    保存配置
-                  </NButton>
-                  <NButton :loading="testing" @click="handleTestConnection">
-                    测试连接
-                  </NButton>
-                </div>
-
-                <!-- 提示 -->
-                <div class="mt-5 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
-                  <p class="text-xs text-amber-700 dark:text-amber-300 m-0">
-                    注意：如果当前 Coze Token 已完全失效无法连接，请通过 Vercel Dashboard → Settings → Environment Variables 手动更新 COZE_TOKEN 环境变量，然后重新部署。
-                  </p>
-                </div>
-              </div>
-            </NSpin>
+          <!-- 数据同步 -->
+          <div class="p-4 rounded-lg bg-[#fef0f0] dark:bg-[#2e1e1e]">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-sm">数据同步（PG → Coze）</span>
+            </div>
+            <NButton type="warning" size="small" :loading="adminLoading" @click="doSync">执行同步</NButton>
+            <div v-if="syncResult" class="mt-2 text-12px text-secondary">
+              <div>用户: 总计{{ syncResult.users?.total }} 新增{{ syncResult.users?.inserted }} 更新{{ syncResult.users?.updated }} 删除{{ syncResult.users?.deleted }} 跳过{{ syncResult.users?.skipped }}</div>
+              <div>笔记: 总计{{ syncResult.notes?.total }} 新增{{ syncResult.notes?.inserted }} 更新{{ syncResult.notes?.updated }} 删除{{ syncResult.notes?.deleted }} 跳过{{ syncResult.notes?.skipped }}</div>
+              <NTag :type="syncResult?.has_changes ? 'warning' : 'success'" size="tiny" class="mt-1">
+                {{ syncResult?.has_changes ? '有变更' : '无变更（数据一致）' }}
+              </NTag>
+            </div>
           </div>
-        </NTabPane>
-      </NTabs>
+
+          <!-- 后端切换 -->
+          <div class="p-4 rounded-lg bg-[#f5f5f5] dark:bg-[#2a2a2a]">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-sm">主后端切换</span>
+              <NTag type="info" size="small">{{ activeBackend === 'postgres' ? 'PostgreSQL' : 'Coze' }}</NTag>
+            </div>
+            <NSpace class="mt-2">
+              <NButton size="small" :type="activeBackend === 'postgres' ? 'primary' : 'default'" @click="toggleBackend('postgres')">PostgreSQL</NButton>
+              <NButton size="small" :type="activeBackend === 'coze' ? 'primary' : 'default'" @click="toggleBackend('coze')">Coze</NButton>
+              <NButton size="small" @click="toggleBackend('null')">恢复默认</NButton>
+            </NSpace>
+          </div>
+        </div>
+      </NCard>
+
+      <!-- 笔记管理 -->
+      <div class="flex items-center gap-3 mb-4">
+        <h1 class="text-xl font-bold text-main m-0">笔记管理</h1>
+        <div class="flex-1" />
+        <NButton type="primary" @click="openCreate('article')">+ 新建文章</NButton>
+        <NButton @click="openCreate('folder')">+ 新建目录</NButton>
+      </div>
+
+      <div class="paper! p-4">
+        <NDataTable :columns="columns" :data="notes" :loading="loading" :pagination="{ pageSize: 20 }" size="small" />
+      </div>
     </div>
 
     <!-- 笔记编辑 Modal -->

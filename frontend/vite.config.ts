@@ -13,7 +13,11 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': {
+      '/postgre': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/coze': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
