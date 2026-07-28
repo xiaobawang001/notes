@@ -36,10 +36,12 @@ watch(locateTarget, (id) => {
     <!-- 目录节点 -->
     <div v-if="node.type === 'folder'">
       <div
-        class="flex items-center gap-1 py-1 px-2 rounded-md text-14px cursor-pointer select-none transition-colors hover:bg-[var(--yuque-brand-soft)]"
+        class="flex items-center gap-1 py-1 px-2 rounded-md text-14px cursor-pointer select-none transition-colors hover:bg-[rgba(0,185,107,0.06)]"
         :class="[
-          level === 0 ? 'font-medium text-[var(--yuque-text-secondary)]' : 'text-[var(--yuque-text-secondary)]',
-          ancestorIds?.has(node.id) ? 'bg-[var(--yuque-brand-soft)]/70' : '',
+          level === 0 ? 'font-medium' : '',
+          ancestorIds?.has(node.id)
+            ? 'bg-[rgba(0,185,107,0.1)] text-[var(--yuque-brand)]'
+            : 'text-[var(--yuque-text-secondary)]',
         ]"
         :style="{ paddingLeft: level > 0 ? `${level * 12}px` : '0' }"
         @click="toggle"
@@ -64,8 +66,8 @@ watch(locateTarget, (id) => {
       :data-node-id="node.id"
       class="block py-1 px-2 rounded-md text-14px text-main no-underline! transition-colors"
       :class="{
-        'hover:bg-[var(--yuque-brand-soft)]': node.id !== activeId,
-        'bg-[var(--yuque-brand-soft)] text-[var(--yuque-brand)]! font-medium': node.id === activeId,
+        'hover:bg-[rgba(0,185,107,0.06)]': node.id !== activeId,
+        'bg-[rgba(0,185,107,0.15)] text-[var(--yuque-brand)]! font-semibold': node.id === activeId,
       }"
       :style="{ paddingLeft: level > 0 ? `${level * 12 + 24}px` : '24px' }"
     >
