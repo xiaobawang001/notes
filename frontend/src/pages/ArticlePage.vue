@@ -30,6 +30,7 @@ const articleId = ref<number | null>(null)
 const loading = ref(true)
 const error = ref(false)
 const tree = ref<TreeNode[]>([])
+const activeAncestors = ref(new Set<number>())
 const imageVisible = ref(false)
 const imageSrc = ref('')
 
@@ -52,24 +53,6 @@ function toggleAll() {
     collapseAll.value = true; expandAll.value = false
   }
   setTimeout(() => { expandAll.value = false; collapseAll.value = false }, 100)
-}
-
-/** 在树中查找目标节点的所有祖先 ID */
-function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
-  const ancestors = new Set<number>()
-  function walk(list: TreeNodeType[], path: number[]): boolean {
-    for (const n of list) {
-      if (n.id === targetId) { path.forEach(id => ancestors.add(id)); return true }
-      if (n.children?.length) {
-        path.push(n.id)
-        if (walk(n.children, path)) return true
-        path.pop()
-      }
-    }
-    return false
-  }
-  walk(nodes, [])
-  return ancestors
 }
 
 function doLocate() {
@@ -107,6 +90,24 @@ function buildBreadcrumb() {
   ]
 }
 
+/** 在树中查找目标节点的所有祖先 ID */
+function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
+  const ancestors = new Set<number>()
+  function walk(list: TreeNode[], path: number[]): boolean {
+    for (const n of list) {
+      if (n.id === targetId) { path.forEach(id => ancestors.add(id)); return true }
+      if (n.children?.length) {
+        path.push(n.id)
+        if (walk(n.children, path)) return true
+        path.pop()
+      }
+    }
+    return false
+  }
+  walk(nodes, [])
+  return ancestors
+}
+
 async function load() {
   loading.value = true; error.value = false
   try {
@@ -115,6 +116,7 @@ async function load() {
     articleId.value = article.value.id
     const [t] = await Promise.all([listCategories()])
     tree.value = t
+    activeAncestors.value = findAncestors(t, article.value.id)
     buildBreadcrumb()
   } catch { error.value = true } finally { loading.value = false }
 }
@@ -194,7 +196,7 @@ function onContentClick(e: MouseEvent) {
               <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
             </button>
           </div>
-          <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" :active-id="article?.id" />
+          <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" :active-id="article?.id" :ancestor-ids="activeAncestors" />
         </div>
       </aside>
 
