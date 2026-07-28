@@ -35,7 +35,8 @@ function closePanel() {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+  // Ctrl+F 触发文内搜索（覆盖浏览器原生查找）
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
     e.preventDefault()
     open.value ? closePanel() : openPanel()
     return
@@ -62,8 +63,8 @@ onUnmounted(() => { document.removeEventListener('keydown', onKeydown, true); cl
     <!-- 触发按钮 -->
     <button
       v-show="!open"
-      class="isp-trigger"
-      title="文内搜索 (Ctrl+Shift+F)"
+      class="w-10 h-10 rounded-[8px] border border-[var(--yuque-border-light)] bg-[var(--yuque-paper-bg)] text-[var(--yuque-text-secondary)] shadow-[var(--yuque-shadow-paper)] cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] hover:border-[var(--yuque-brand)]"
+      title="文内搜索 (Ctrl+F)"
       @click="openPanel"
     >
       <Search :size="18" />
@@ -95,25 +96,6 @@ onUnmounted(() => { document.removeEventListener('keydown', onKeydown, true); cl
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
-}
-.isp-trigger {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--yuque-border-light);
-  border-radius: 8px;
-  background: var(--yuque-paper-bg);
-  color: var(--yuque-text-secondary);
-  box-shadow: var(--yuque-shadow-paper);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-.isp-trigger:hover {
-  background: var(--yuque-brand-soft);
-  border-color: var(--yuque-brand);
-  color: var(--yuque-brand);
 }
 .isp-panel {
   display: flex;
