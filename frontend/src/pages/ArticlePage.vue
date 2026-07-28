@@ -48,7 +48,7 @@ function buildBreadcrumb() {
   }
   const path = findPath(tree.value, article.value.id)
   breadcrumbItems.value = [
-    { label: '首页', to: '/' },
+    { label: '首页', to: '/notes' },
     ...path.reverse().map(n => ({ label: n.name, to: n.type === 'article' ? `/article/${n.id}` : undefined })),
   ]
 }
@@ -138,18 +138,17 @@ function onContentClick(e: MouseEvent) {
         </div>
       </aside>
 
-      <!-- Content + ToC -->
+      <!-- Main area -->
       <main
-        class="flex-1 min-h-screen gap-6 px-6 pt-6"
-        :style="{
-          marginLeft: ui.focusMode ? '0' : 'var(--vp-sidebar-width)',
-          maxWidth: ui.focusMode ? 'var(--blog-content-max-width)' : 'none',
-          marginRight: 'auto',
-        }"
+        class="flex-1 ml-[var(--vp-sidebar-width)] min-h-[calc(100vh-56px)]"
+        :style="{ marginLeft: ui.focusMode ? '0' : 'var(--vp-sidebar-width)' }"
       >
-        <div class="flex gap-6 justify-center">
-          <!-- 正文 -->
-          <div class="w-full max-w-[var(--blog-content-max-width)]">
+        <div class="flex gap-8 justify-center px-6 py-6">
+          <!-- 正文区 -->
+          <div
+            class="w-full min-w-0"
+            :style="{ maxWidth: ui.focusMode ? 'var(--blog-content-max-width)' : 'var(--blog-content-max-width)' }"
+          >
             <NSpin :show="loading" size="large">
               <div v-if="error" class="text-center py-16">
                 <p class="text-secondary mb-4">文章未找到</p>
@@ -183,8 +182,8 @@ function onContentClick(e: MouseEvent) {
             </NSpin>
           </div>
 
-          <!-- 右侧目录（专注模式隐藏） -->
-          <div v-if="!ui.focusMode && article">
+          <!-- 右侧目录 -->
+          <div v-if="!ui.focusMode && article" class="shrink-0">
             <DocOutline content-selector=".vp-doc" />
           </div>
         </div>

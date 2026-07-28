@@ -61,25 +61,27 @@ onMounted(async () => {
       </aside>
 
       <!-- Main -->
-      <main class="flex-1 ml-[var(--vp-sidebar-width)] p-6" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
-        <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
-        <NSpin :show="loading">
-          <div class="grid gap-3">
-            <article
-              v-for="a in articles"
-              :key="a.id"
-              class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow"
-              @click="router.push(`/article/${a.id}`)"
-            >
-              <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
-              <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
-              <div class="flex items-center gap-2 mt-3 text-12px text-secondary">
-                <span>{{ a.word_count }} 字</span>
-                <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
-              </div>
-            </article>
-          </div>
-        </NSpin>
+      <main class="flex-1 ml-[var(--vp-sidebar-width)] min-h-[calc(100vh-56px)]">
+        <div class="mx-auto px-6 py-6" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
+          <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
+          <NSpin :show="loading">
+            <div class="grid gap-3">
+              <article
+                v-for="a in articles"
+                :key="a.id"
+                class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow"
+                @click="router.push(`/article/${a.id}`)"
+              >
+                <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
+                <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
+                <div class="flex items-center gap-2 mt-3 text-12px text-secondary">
+                  <span>{{ a.word_count }} 字</span>
+                  <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
+                </div>
+              </article>
+            </div>
+          </NSpin>
+        </div>
       </main>
     </div>
     <BackToTop />
