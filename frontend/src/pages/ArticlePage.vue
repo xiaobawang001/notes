@@ -15,6 +15,7 @@ import InPageSearch from '~/components/InPageSearch.vue'
 import DocOutline from '~/components/DocOutline.vue'
 import BackToTop from '~/components/BackToTop.vue'
 import SiteFooter from '~/components/SiteFooter.vue'
+import TreeNodeComp from '~/components/TreeNode.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -129,20 +130,7 @@ function onContentClick(e: MouseEvent) {
       >
         <div class="p-4 pt-3">
           <h2 class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase mb-3">文章目录</h2>
-          <div v-for="node in tree" :key="node.id" class="mb-1">
-            <div class="text-14px font-medium text-[var(--yuque-text-secondary)] py-1 px-2">{{ node.name }}</div>
-            <div v-if="node.children" class="pl-4">
-              <RouterLink
-                v-for="child in node.children"
-                :key="child.id"
-                :to="`/article/${child.id}`"
-                class="block py-1 px-2 rounded-md text-13px text-main no-underline! hover:bg-[var(--yuque-brand-soft)]"
-                :class="{ 'bg-[var(--yuque-brand-soft)] text-[var(--yuque-brand)]!': child.id === article?.id }"
-              >
-                {{ child.name }}
-              </RouterLink>
-            </div>
-          </div>
+          <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" :active-id="article?.id" />
         </div>
       </aside>
 
@@ -231,6 +219,7 @@ function onContentClick(e: MouseEvent) {
     </div>
 
     <SiteFooter />
+    <InPageSearch />
     <BackToTop />
     <ImageZoom :visible="imageVisible" :src="imageSrc" alt="" @update:visible="imageVisible = $event" />
   </div>

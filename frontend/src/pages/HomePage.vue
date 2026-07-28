@@ -9,6 +9,7 @@ import { NSpin } from 'naive-ui'
 import { FolderOpen } from 'lucide-vue-next'
 import BackToTop from '~/components/BackToTop.vue'
 import SiteFooter from '~/components/SiteFooter.vue'
+import TreeNodeComp from '~/components/TreeNode.vue'
 
 const router = useRouter()
 const ui = useUiStore()
@@ -56,21 +57,7 @@ onMounted(async () => {
         <div class="p-4 pt-3">
           <h2 class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase mb-3">目录</h2>
           <NSpin :show="loading" size="small">
-            <div v-for="node in tree" :key="node.id" class="mb-1">
-              <div class="flex items-center gap-1.5 py-1 px-2 rounded-md text-14px font-medium text-[var(--yuque-text-secondary)] cursor-default">
-                <span>{{ node.name }}</span>
-              </div>
-              <div v-if="node.children" class="pl-4">
-                <RouterLink
-                  v-for="child in node.children"
-                  :key="child.id"
-                  :to="`/article/${child.id}`"
-                  class="block py-1.5 px-2 rounded-md text-14px text-main hover:bg-[var(--yuque-brand-soft)] transition-colors no-underline!"
-                >
-                  {{ child.name }}
-                </RouterLink>
-              </div>
-            </div>
+            <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" />
           </NSpin>
         </div>
       </aside>
