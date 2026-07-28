@@ -4,7 +4,8 @@ import { useAuthStore } from '~/stores/auth'
 import { getNotes, createNote, updateNote, deleteNote, getCategories } from '~/api/notes'
 import api, { setApiPrefix } from '~/api/client'
 import type { Note } from '~/types/note'
-import { NButton, NModal, NInput, NDataTable, NSpace, NSelect, NPopconfirm, NCard, NTag, NSwitch, useMessage } from 'naive-ui'
+import { NButton, NModal, NDataTable, NSpace, NSelect, NPopconfirm, NCard, NTag, useMessage } from 'naive-ui'
+import MarkdownEditor from '~/components/MarkdownEditor.vue'
 
 const auth = useAuthStore()
 const message = useMessage()
@@ -243,14 +244,14 @@ const columns = [
     </div>
 
     <!-- 笔记编辑 Modal -->
-    <NModal v-model:show="showModal" title="编辑笔记" style="width: 800px;">
+    <NModal v-model:show="showModal" title="编辑笔记" style="width: 960px;">
       <div class="flex flex-col gap-3 p-2">
         <NInput v-model:value="formTitle" placeholder="标题" size="large" />
         <NInput v-model:value="formSlug" placeholder="URL 标识（可选）" />
         <NSelect v-model:value="formType" :options="[{ label: '文章', value: 'article' }, { label: '目录', value: 'folder' }]" />
         <NSelect v-model:value="formStatus" v-if="formType === 'article'" :options="[{ label: '已发布', value: 'published' }, { label: '草稿', value: 'draft' }]" />
         <NSelect v-model:value="formParentId" :options="[{ label: '顶级（无父目录）', value: 0 }, ...tree.map((t: any) => ({ label: t.name, value: t.id, key: 'f-' + t.id }))]" placeholder="父目录" />
-        <textarea v-model="formContent" placeholder="Markdown 内容" class="w-full h-60 p-3 rounded-md border border-[#e7e9e8] dark:border-[#383940] bg-white dark:bg-[#2e2f35] text-main font-mono text-13px resize-y outline-none" />
+        <MarkdownEditor v-model="formContent" />
         <NButton type="primary" @click="handleSave">{{ editNote ? '保存' : '创建' }}</NButton>
       </div>
     </NModal>

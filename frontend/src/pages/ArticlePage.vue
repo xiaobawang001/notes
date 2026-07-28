@@ -14,6 +14,7 @@ import NavBreadcrumb from '~/components/NavBreadcrumb.vue'
 import InPageSearch from '~/components/InPageSearch.vue'
 import DocOutline from '~/components/DocOutline.vue'
 import BackToTop from '~/components/BackToTop.vue'
+import SiteFooter from '~/components/SiteFooter.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -230,6 +231,7 @@ function onContentClick(e: MouseEvent) {
       </main>
     </div>
 
+    <SiteFooter />
     <BackToTop />
     <ImageZoom :visible="imageVisible" :src="imageSrc" alt="" @update:visible="imageVisible = $event" />
   </div>

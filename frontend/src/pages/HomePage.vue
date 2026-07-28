@@ -8,6 +8,7 @@ import { getNotes } from '~/api/notes'
 import { NSpin } from 'naive-ui'
 import { FolderOpen } from 'lucide-vue-next'
 import BackToTop from '~/components/BackToTop.vue'
+import SiteFooter from '~/components/SiteFooter.vue'
 
 const router = useRouter()
 const ui = useUiStore()
@@ -102,6 +103,7 @@ onMounted(async () => {
       </main>
     </div>
     <BackToTop />
+    <SiteFooter />
   </div>
 </template>
 
