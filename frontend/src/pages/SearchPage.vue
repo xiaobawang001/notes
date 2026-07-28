@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { searchNotes } from '~/api/notes'
 import { NSpin } from 'naive-ui'
+import { Search } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,15 +27,26 @@ onMounted(() => { if (query.value) doSearch() })
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f4f5f5] dark:bg-[#2a2b30]">
-    <header class="h-14 bg-white dark:bg-[#2c2d32] border-b border-[#e7e9e8] dark:border-[#383940] flex items-center px-5 gap-4">
-      <RouterLink to="/" class="text-lg font-semibold text-main no-underline!">我的笔记</RouterLink>
-      <div class="flex-1" />
-      <input v-model="query" type="text" placeholder="搜索..." class="w-64 px-3 py-1.5 rounded-md border border-[#e7e9e8] dark:border-[#383940] bg-white dark:bg-[#2e2f35] text-14px outline-none text-main" @keydown.enter="doSearch" />
-      <button class="text-14px px-3 py-1 rounded bg-[#00b96b]/10 text-[#00b96b] border-none cursor-pointer" @click="doSearch">搜索</button>
-    </header>
+  <div class="min-h-screen bg-[var(--yuque-page-bg)] pt-6">
+    <!-- 搜索条 -->
+    <div class="max-w-[var(--blog-content-max-width)] mx-auto px-6 pb-4">
+      <div class="flex items-center gap-2">
+        <Search :size="18" class="text-secondary shrink-0" />
+        <input
+          v-model="query"
+          type="text"
+          placeholder="输入关键词搜索文章..."
+          class="flex-1 px-4 py-2 text-15px rounded-lg border border-[var(--yuque-border)] bg-[var(--yuque-paper-bg)] outline-none text-main transition-shadow focus:shadow-[0_0_0_2px_var(--yuque-brand-soft)] focus:border-[var(--yuque-brand)]"
+          @keydown.enter="doSearch"
+        />
+        <button
+          class="px-5 py-2 text-14px rounded-lg border-none cursor-pointer bg-[var(--yuque-brand)] text-white font-medium hover:opacity-90 transition-opacity"
+          @click="doSearch"
+        >搜索</button>
+      </div>
+    </div>
 
-    <main class="max-w-[960px] mx-auto p-6">
+    <main class="max-w-[var(--blog-content-max-width)] mx-auto p-6 pt-0">
       <h1 class="text-xl font-bold text-main mb-4" v-if="searched">搜索结果（{{ total }}）</h1>
       <NSpin :show="loading">
         <div v-if="!searched" class="text-center text-secondary py-16">输入关键词搜索文章</div>

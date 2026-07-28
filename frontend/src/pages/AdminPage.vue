@@ -169,14 +169,7 @@ const columns = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f4f5f5] dark:bg-[#2a2b30]">
-    <header class="h-14 bg-white dark:bg-[#2c2d32] border-b border-[#e7e9e8] dark:border-[#383940] flex items-center px-5 gap-4">
-      <RouterLink to="/" class="text-lg font-semibold text-main no-underline!">管理后台</RouterLink>
-      <div class="flex-1" />
-      <RouterLink to="/" class="link-brand! text-sm">前台</RouterLink>
-      <button class="text-sm text-secondary border-none bg-transparent cursor-pointer" @click="auth.logout()">退出</button>
-    </header>
-
+  <div class="min-h-screen bg-[var(--yuque-page-bg)]">
     <div class="max-w-[1200px] mx-auto p-6">
 
       <!-- 系统管理面板 -->
