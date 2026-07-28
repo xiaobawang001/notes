@@ -1,23 +1,28 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useUiStore } from '~/stores/ui'
-import { useRouter } from 'vue-router'
 import { Sun, Moon, Search, FileText, Settings, LogOut, LogIn } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const ui = useUiStore()
-const router = useRouter()
 
-const fontSizeOptions = [
-  { label: '小', value: 'small' },
-  { label: '中', value: 'medium' },
-  { label: '大', value: 'large' },
-]
-const widthOptions = [
-  { label: '窄', value: 'narrow' },
-  { label: '中', value: 'medium' },
-  { label: '宽', value: 'large' },
-]
+const fontSizeOrder = ['small', 'medium', 'large']
+const fontSizeLabel: Record<string, string> = { small: '小', medium: '中', large: '大' }
+const widthOrder = ['narrow', 'medium', 'large']
+const widthLabel: Record<string, string> = { narrow: '窄', medium: '中', large: '宽' }
+
+const currentFontLabel = computed(() => fontSizeLabel[ui.fontSize] || '中')
+const currentWidthLabel = computed(() => widthLabel[ui.contentWidth] || '中')
+
+function cycleFontSize() {
+  const idx = fontSizeOrder.indexOf(ui.fontSize)
+  ui.setFontSize(fontSizeOrder[(idx + 1) % fontSizeOrder.length])
+}
+function cycleContentWidth() {
+  const idx = widthOrder.indexOf(ui.contentWidth)
+  ui.setContentWidth(widthOrder[(idx + 1) % widthOrder.length])
+}
 </script>
 
 <template>
@@ -34,31 +39,21 @@ const widthOptions = [
 
     <div class="flex-1" />
 
-    <!-- 字号切换 -->
-    <div class="flex items-center gap-0.5 border-r border-[#e7e9e8] dark:border-[#383940] pr-2 mr-2">
-      <button
-        v-for="opt in fontSizeOptions" :key="opt.value"
-        class="px-1.5 py-0.5 text-13px rounded border-none cursor-pointer transition-colors"
-        :class="ui.fontSize === opt.value
-          ? 'bg-[#00b96b] text-white'
-          : 'text-secondary hover:bg-[#00b96b]/10'"
-        :title="`字号：${opt.label}`"
-        @click="ui.setFontSize(opt.value)"
-      >{{ opt.label }}</button>
-    </div>
+    <!-- 字号切换（轮换：小→中→大→小） -->
+    <button
+      class="px-2 py-1 text-13px rounded border-none cursor-pointer transition-colors border-r border-[var(--yuque-border)] mr-2"
+      :class="'text-secondary hover:bg-[var(--yuque-brand-soft)]'"
+      title="点击切换字号"
+      @click="cycleFontSize"
+    >字 {{ currentFontLabel }}</button>
 
-    <!-- 阅读宽度切换 -->
-    <div class="flex items-center gap-0.5 border-r border-[#e7e9e8] dark:border-[#383940] pr-2 mr-2">
-      <button
-        v-for="opt in widthOptions" :key="opt.value"
-        class="px-1.5 py-0.5 text-13px rounded border-none cursor-pointer transition-colors"
-        :class="ui.contentWidth === opt.value
-          ? 'bg-[#00b96b] text-white'
-          : 'text-secondary hover:bg-[#00b96b]/10'"
-        :title="`阅读宽度：${opt.label}`"
-        @click="ui.setContentWidth(opt.value)"
-      >{{ opt.label }}</button>
-    </div>
+    <!-- 阅读宽度切换（轮换：窄→中→宽→窄） -->
+    <button
+      class="px-2 py-1 text-13px rounded border-none cursor-pointer transition-colors border-r border-[var(--yuque-border)] mr-2"
+      :class="'text-secondary hover:bg-[var(--yuque-brand-soft)]'"
+      title="点击切换阅读宽度"
+      @click="cycleContentWidth"
+    >宽 {{ currentWidthLabel }}</button>
 
     <!-- 专注模式 -->
     <button
