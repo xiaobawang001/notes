@@ -9,12 +9,14 @@ const auth = useAuthStore()
 const message = useMessage()
 const username = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const email = ref('')
 const loading = ref(false)
 
 async function handleRegister() {
   if (username.value.length < 3) { message.warning('用户名至少3个字符'); return }
   if (password.value.length < 6) { message.warning('密码至少6个字符'); return }
+  if (password.value !== confirmPassword.value) { message.warning('两次密码输入不一致'); return }
   loading.value = true
   try {
     await auth.register(username.value, password.value, email.value || undefined)
@@ -35,7 +37,8 @@ async function handleRegister() {
       <NForm>
         <NFormItem label="用户名"><NInput v-model:value="username" placeholder="至少3个字符" size="large" /></NFormItem>
         <NFormItem label="邮箱（可选）"><NInput v-model:value="email" placeholder="example@email.com" size="large" type="email" /></NFormItem>
-        <NFormItem label="密码"><NInput v-model:value="password" type="password" placeholder="至少6个字符" size="large" @keydown.enter="handleRegister" /></NFormItem>
+        <NFormItem label="密码"><NInput v-model:value="password" type="password" placeholder="至少6个字符" size="large" /></NFormItem>
+        <NFormItem label="确认密码"><NInput v-model:value="confirmPassword" type="password" placeholder="再次输入密码" size="large" @keydown.enter="handleRegister" /></NFormItem>
         <NButton type="primary" block size="large" :loading="loading" @click="handleRegister">注册</NButton>
       </NForm>
       <p class="mt-4 text-center text-secondary text-13px">
