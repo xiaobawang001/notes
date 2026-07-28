@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, watch, onMounted } from 'vue'
+import { ref, inject, watch } from 'vue'
 import type { TreeNode as TreeNodeType } from '~/types/note'
 import { ChevronRight, FolderOpen } from 'lucide-vue-next'
 
@@ -8,24 +8,24 @@ const props = defineProps<{ node: TreeNodeType; level: number; activeId?: number
 const expanded = ref(props.level < 1) // 默认展开第一级
 const expandAll = inject<boolean>('treeExpandAll', false)
 const collapseAll = inject<boolean>('treeCollapseAll', false)
+const locateSignal = inject<number>('treeLocateId', 0)
 
 watch(expandAll, (v) => { if (v) expanded.value = true })
 watch(collapseAll, (v) => { if (v) expanded.value = false })
 
 function toggle() { expanded.value = !expanded.value }
 
-// 定位当前文章：滚动到匹配节点
-const elRef = ref<HTMLElement | null>(null)
-const locateSignal = inject<number>('treeLocateId', 0)
+// 定位：用 data 属性 + querySelector 实现，避免 ref 回调导致 Vue patch 冲突
 watch(locateSignal, (id) => {
   if (id && id === props.node.id) {
-    elRef.value?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    const el = document.querySelector(`[data-node-id="${id}"]`)
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 })
 </script>
 
 <template>
-  <div class="tree-node" :ref="(el: any) => { if (node.id === activeId) elRef.value = el as HTMLElement }">
+  <div class="tree-node">
     <!-- 目录节点 -->
     <div v-if="node.type === 'folder'">
       <div
@@ -51,6 +51,7 @@ watch(locateSignal, (id) => {
     <RouterLink
       v-else
       :to="`/article/${node.id}`"
+      :data-node-id="node.id"
       class="block py-1 px-2 rounded-md text-14px text-main no-underline! transition-colors"
       :class="{
         'hover:bg-[var(--yuque-brand-soft)]': node.id !== activeId,
