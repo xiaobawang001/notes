@@ -36,11 +36,13 @@ const imageSrc = ref('')
 // 展开/折叠/定位控制
 const expandAll = ref(false)
 const collapseAll = ref(false)
-const locateId = ref(0)
+const locateTarget = ref(0)
+const locateAncestors = ref(new Set<number>())
 const allExpanded = ref(false)
 provide('treeExpandAll', expandAll)
 provide('treeCollapseAll', collapseAll)
-provide('treeLocateId', locateId)
+provide('treeLocateTarget', locateTarget)
+provide('treeLocateAncestors', locateAncestors)
 
 function toggleAll() {
   allExpanded.value = !allExpanded.value
@@ -51,7 +53,31 @@ function toggleAll() {
   }
   setTimeout(() => { expandAll.value = false; collapseAll.value = false }, 100)
 }
-function doLocate() { locateId.value = Date.now(); setTimeout(() => locateId.value = 0, 300) }
+
+/** 在树中查找目标节点的所有祖先 ID */
+function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
+  const ancestors = new Set<number>()
+  function walk(list: TreeNodeType[], path: number[]): boolean {
+    for (const n of list) {
+      if (n.id === targetId) { path.forEach(id => ancestors.add(id)); return true }
+      if (n.children?.length) {
+        path.push(n.id)
+        if (walk(n.children, path)) return true
+        path.pop()
+      }
+    }
+    return false
+  }
+  walk(nodes, [])
+  return ancestors
+}
+
+function doLocate() {
+  if (!article.value) return
+  locateAncestors.value = findAncestors(tree.value, article.value.id)
+  locateTarget.value = article.value.id
+  setTimeout(() => { locateTarget.value = 0; locateAncestors.value = new Set() }, 500)
+}
 
 // 上一/下一篇 & 相关推荐
 const { prevArticle, nextArticle, relatedArticles } = useArticleNav(tree, articleId)

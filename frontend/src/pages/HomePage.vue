@@ -35,11 +35,13 @@ function getCategoryName(parentId: number): string {
 // 展开/折叠/定位控制（通过 provide/inject 传递给 TreeNode）
 const expandAll = ref(false)
 const collapseAll = ref(false)
-const locateId = ref(0)
+const locateTarget = ref(0)
+const locateAncestors = ref(new Set<number>())
 const allExpanded = ref(false)
 provide('treeExpandAll', expandAll)
 provide('treeCollapseAll', collapseAll)
-provide('treeLocateId', locateId)
+provide('treeLocateTarget', locateTarget)
+provide('treeLocateAncestors', locateAncestors)
 
 function toggleAll() {
   allExpanded.value = !allExpanded.value
@@ -50,7 +52,34 @@ function toggleAll() {
   }
   setTimeout(() => { expandAll.value = false; collapseAll.value = false }, 100)
 }
-function doLocate() { locateId.value = Date.now(); setTimeout(() => locateId.value = 0, 300) }
+
+/** 在树中查找目标节点的所有祖先 ID */
+function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
+  const ancestors = new Set<number>()
+  function walk(list: TreeNodeType[], path: number[]): boolean {
+    for (const n of list) {
+      if (n.id === targetId) { path.forEach(id => ancestors.add(id)); return true }
+      if (n.children?.length) {
+        path.push(n.id)
+        if (walk(n.children, path)) return true
+        path.pop()
+      }
+    }
+    return false
+  }
+  walk(nodes, [])
+  return ancestors
+}
+
+function doLocate() {
+  if (!articles.value.length && !tree.value.length) return
+  // 取第一篇文章作为定位目标（首页无当前文章概念，定位到首篇）
+  const first = articles.value[0]
+  if (!first) return
+  locateAncestors.value = findAncestors(tree.value, first.id)
+  locateTarget.value = first.id
+  setTimeout(() => { locateTarget.value = 0; locateAncestors.value = new Set() }, 500)
+}
 
 onMounted(async () => {
   try {

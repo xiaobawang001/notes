@@ -8,16 +8,23 @@ const props = defineProps<{ node: TreeNodeType; level: number; activeId?: number
 const expanded = ref(props.level < 1) // 默认展开第一级
 const expandAll = inject<boolean>('treeExpandAll', false)
 const collapseAll = inject<boolean>('treeCollapseAll', false)
-const locateSignal = inject<number>('treeLocateId', 0)
+const locateTarget = inject<number>('treeLocateTarget', 0)
+const locateAncestors = inject<Set<number>>('treeLocateAncestors', new Set())
 
 watch(expandAll, (v) => { if (v) expanded.value = true })
 watch(collapseAll, (v) => { if (v) expanded.value = false })
 
 function toggle() { expanded.value = !expanded.value }
 
-// 定位：用 data 属性 + querySelector 实现，避免 ref 回调导致 Vue patch 冲突
-watch(locateSignal, (id) => {
-  if (id && id === props.node.id) {
+// 定位：展开祖先目录 + 滚动到目标文章
+watch(locateTarget, (id) => {
+  if (!id) return
+  // 如果是目录且是目标祖先 → 展开自己
+  if (props.node.type === 'folder' && locateAncestors.value.has(props.node.id)) {
+    expanded.value = true
+  }
+  // 如果是文章且匹配目标 → 滚动到可视区域
+  if (props.node.type !== 'folder' && id === props.node.id) {
     const el = document.querySelector(`[data-node-id="${id}"]`)
     if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
