@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUiStore } from '~/stores/ui'
 import { useCategories } from '~/composables/useCategories'
 import type { Note, TreeNode } from '~/types/note'
 import { getNotes } from '~/api/notes'
 import { NSpin } from 'naive-ui'
+import { FolderOpen } from 'lucide-vue-next'
 import BackToTop from '~/components/BackToTop.vue'
 
 const router = useRouter()
@@ -15,6 +16,19 @@ const { listCategories } = useCategories()
 const tree = ref<TreeNode[]>([])
 const articles = ref<Note[]>([])
 const loading = ref(true)
+
+/** 根据 parent_id 查找分类名称 */
+function getCategoryName(parentId: number): string {
+  for (const cat of tree.value) {
+    if (cat.id === parentId) return cat.name
+    if (cat.children) {
+      for (const child of cat.children) {
+        if (child.id === parentId) return child.name
+      }
+    }
+  }
+  return ''
+}
 
 onMounted(async () => {
   try {
@@ -66,19 +80,22 @@ onMounted(async () => {
           <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
           <NSpin :show="loading">
             <div class="grid gap-3">
-              <article
-                v-for="a in articles"
-                :key="a.id"
-                class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow"
-                @click="router.push(`/article/${a.id}`)"
-              >
-                <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
-                <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
-                <div class="flex items-center gap-2 mt-3 text-12px text-secondary">
-                  <span>{{ a.word_count }} 字</span>
-                  <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
-                </div>
-              </article>
+            <article
+              v-for="a in articles"
+              :key="a.id"
+              class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow"
+              @click="router.push(`/article/${a.id}`)"
+            >
+              <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
+              <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
+              <div class="flex items-center gap-3 mt-3 text-12px text-secondary">
+                <span v-if="getCategoryName(a.parent_id)" class="flex items-center gap-1">
+                  <FolderOpen :size="12" /> {{ getCategoryName(a.parent_id) }}
+                </span>
+                <span>{{ a.word_count }} 字</span>
+                <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
+              </div>
+            </article>
             </div>
           </NSpin>
         </div>

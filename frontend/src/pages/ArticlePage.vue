@@ -2,9 +2,11 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage, NTag, NSpin } from 'naive-ui'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useMarkdown } from '~/composables/useMarkdown'
 import { useArticles } from '~/composables/useArticles'
 import { useCategories } from '~/composables/useCategories'
+import { useArticleNav } from '~/composables/useArticleNav'
 import { useUiStore } from '~/stores/ui'
 import type { Note, TreeNode } from '~/types/note'
 import ImageZoom from '~/components/ImageZoom.vue'
@@ -17,16 +19,20 @@ const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
 const { render, renderCharts } = useMarkdown()
-const { getArticle, listArticles } = useArticles()
+const { getArticle } = useArticles()
 const { listCategories } = useCategories()
 const message = useMessage()
 
 const article = ref<Note | null>(null)
+const articleId = ref<number | null>(null)
 const loading = ref(true)
 const error = ref(false)
 const tree = ref<TreeNode[]>([])
 const imageVisible = ref(false)
 const imageSrc = ref('')
+
+// 上一/下一篇 & 相关推荐
+const { prevArticle, nextArticle, relatedArticles } = useArticleNav(tree, articleId)
 
 const idOrSlug = computed(() => route.params.idOrSlug as string)
 const renderedContent = computed(() => render(article.value?.content || ''))
@@ -58,6 +64,7 @@ async function load() {
   try {
     article.value = await getArticle(idOrSlug.value)
     if (!article.value) { error.value = true; return }
+    articleId.value = article.value.id
     const [t] = await Promise.all([listCategories()])
     tree.value = t
     buildBreadcrumb()
@@ -175,8 +182,41 @@ function onContentClick(e: MouseEvent) {
                   />
                 </div>
 
-                <div class="flex justify-between mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
-                  <RouterLink to="/notes" class="link-brand text-14px">← 返回首页</RouterLink>
+                <!-- 上一篇/下一篇 -->
+                <div class="mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
+                  <div class="flex justify-between gap-4">
+                    <RouterLink
+                      v-if="prevArticle"
+                      :to="`/article/${prevArticle.id}`"
+                      class="flex items-center gap-1 text-14px text-secondary no-underline! hover:text-[var(--yuque-brand)] transition-colors"
+                    >
+                      <ChevronLeft :size="16" /> {{ prevArticle.title }}
+                    </RouterLink>
+                    <div v-else />
+                    <RouterLink
+                      v-if="nextArticle"
+                      :to="`/article/${nextArticle.id}`"
+                      class="flex items-center gap-1 text-14px text-secondary no-underline! hover:text-[var(--yuque-brand)] transition-colors text-right"
+                    >
+                      {{ nextArticle.title }} <ChevronRight :size="16" />
+                    </RouterLink>
+                    <div v-else />
+                  </div>
+                </div>
+
+                <!-- 相关文章推荐 -->
+                <div v-if="relatedArticles.length" class="mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
+                  <h3 class="text-15px font-semibold text-main mb-3">相关阅读</h3>
+                  <div class="grid grid-cols-2 gap-3">
+                    <RouterLink
+                      v-for="r in relatedArticles" :key="r.id"
+                      :to="`/article/${r.id}`"
+                      class="paper! p-4 no-underline! block hover:shadow-md transition-shadow"
+                    >
+                      <div class="text-14px font-medium text-main mb-1">{{ r.title }}</div>
+                      <div class="text-12px text-secondary">{{ r.word_count }} 字</div>
+                    </RouterLink>
+                  </div>
                 </div>
               </template>
             </NSpin>
