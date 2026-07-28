@@ -153,7 +153,7 @@ function onContentClick(e: MouseEvent) {
             <NSpin :show="loading" size="large">
               <div v-if="error" class="text-center py-16">
                 <p class="text-secondary mb-4">文章未找到</p>
-                <RouterLink to="/" class="link-brand">← 返回首页</RouterLink>
+                <RouterLink to="/notes" class="link-brand">← 返回首页</RouterLink>
               </div>
 
               <template v-else-if="article">
@@ -177,7 +177,7 @@ function onContentClick(e: MouseEvent) {
                 </div>
 
                 <div class="flex justify-between mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
-                  <RouterLink to="/" class="link-brand text-14px">← 返回首页</RouterLink>
+                  <RouterLink to="/notes" class="link-brand text-14px">← 返回首页</RouterLink>
                 </div>
               </template>
             </NSpin>

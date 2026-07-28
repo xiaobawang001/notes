@@ -47,7 +47,7 @@ function toggleDark() {
     class="fixed top-0 left-0 right-0 z-20 h-14 bg-white dark:bg-[#2c2d32] border-b border-[#e7e9e8] dark:border-[#383940] flex items-center px-5 gap-1 select-none"
   >
     <!-- 站点标题 -->
-    <RouterLink to="/" class="text-lg font-semibold text-main no-underline! mr-3">我的笔记</RouterLink>
+    <RouterLink to="/notes" class="text-lg font-semibold text-main no-underline! mr-3">我的笔记</RouterLink>
 
     <!-- 搜索 -->
     <RouterLink

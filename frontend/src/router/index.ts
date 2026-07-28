@@ -4,9 +4,13 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/login',
+      path: '/',
       name: 'Login',
       component: () => import('~/pages/LoginPage.vue'),
+    },
+    {
+      path: '/login',
+      redirect: '/',
     },
     {
       path: '/register',
@@ -14,7 +18,7 @@ const router = createRouter({
       component: () => import('~/pages/RegisterPage.vue'),
     },
     {
-      path: '/',
+      path: '/notes',
       name: 'Home',
       component: () => import('~/pages/HomePage.vue'),
     },
@@ -37,7 +41,7 @@ const router = createRouter({
   ],
 })
 
-// 路由守卫：未登录跳转 /login，非管理员访问 admin 页面跳转首页
+// 路由守卫：未登录跳转登录页，非管理员访问 admin 跳转笔记页
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
 
@@ -50,7 +54,7 @@ router.beforeEach((to, _from, next) => {
     try {
       const payload = JSON.parse(atob(token!.split('.')[1]))
       if (payload.role !== 'admin') {
-        next({ name: 'Home' })
+        next('/notes')
         return
       }
     } catch {

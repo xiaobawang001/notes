@@ -21,7 +21,7 @@ async function handleLogin() {
     await auth.login(username.value, password.value)
     message.success('登录成功')
     const redirect = router.currentRoute.value.query.redirect as string
-    router.push(redirect || '/')
+    router.push(redirect || '/notes')
   } catch (e: any) {
     message.error(e?.msg || '登录失败')
   } finally {

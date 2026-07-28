@@ -21,7 +21,7 @@ async function handleRegister() {
   try {
     await auth.register(username.value, password.value, email.value || undefined)
     message.success('注册成功')
-    router.push('/')
+    router.push('/notes')
   } catch (e: any) {
     message.error(e?.msg || '注册失败')
   } finally {
