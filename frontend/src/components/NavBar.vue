@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useMessage } from 'naive-ui'
 import { useAuthStore } from '~/stores/auth'
 import { useUiStore } from '~/stores/ui'
 import {
@@ -9,6 +10,7 @@ import {
 
 const auth = useAuthStore()
 const ui = useUiStore()
+const message = useMessage()
 
 const fontSizeOrder = ['small', 'medium', 'large']
 const fontSizeLabel: Record<string, string> = { small: '小', medium: '中', large: '大' }
@@ -20,11 +22,23 @@ const currentWidthLabel = computed(() => widthLabel[ui.contentWidth])
 
 function cycleFontSize() {
   const idx = fontSizeOrder.indexOf(ui.fontSize)
-  ui.setFontSize(fontSizeOrder[(idx + 1) % fontSizeOrder.length])
+  const next = fontSizeOrder[(idx + 1) % fontSizeOrder.length]
+  ui.setFontSize(next)
+  message.info(`字号：${fontSizeLabel[next]}`)
 }
 function cycleContentWidth() {
   const idx = widthOrder.indexOf(ui.contentWidth)
-  ui.setContentWidth(widthOrder[(idx + 1) % widthOrder.length])
+  const next = widthOrder[(idx + 1) % widthOrder.length]
+  ui.setContentWidth(next)
+  message.info(`宽度：${widthLabel[next]}`)
+}
+function toggleFocus() {
+  ui.toggleFocusMode()
+  message.info(ui.focusMode ? '专注模式已开启' : '专注模式已关闭')
+}
+function toggleDark() {
+  ui.toggleDarkMode()
+  message.info(ui.darkMode ? '深色模式已开启' : '浅色模式已开启')
 }
 </script>
 
@@ -69,7 +83,7 @@ function cycleContentWidth() {
         ? 'bg-[var(--yuque-brand-soft)] text-[var(--yuque-brand)]'
         : 'text-secondary hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)]'"
       title="专注模式：隐藏侧边栏和目录"
-      @click="ui.toggleFocusMode()"
+      @click="toggleFocus"
     >
       <ScanEye :size="16" />
     </button>
@@ -80,7 +94,7 @@ function cycleContentWidth() {
         ? 'bg-[var(--yuque-brand-soft)] text-[var(--yuque-brand)]'
         : 'text-secondary hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)]'"
       :title="ui.darkMode ? '切换浅色模式' : '切换深色模式'"
-      @click="ui.toggleDarkMode()"
+      @click="toggleDark"
     >
       <Sun v-if="!ui.darkMode" :size="16" />
       <Moon v-else :size="16" />
