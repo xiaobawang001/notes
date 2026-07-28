@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage, NTag, NSpin } from 'naive-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
@@ -32,6 +32,18 @@ const error = ref(false)
 const tree = ref<TreeNode[]>([])
 const imageVisible = ref(false)
 const imageSrc = ref('')
+
+// 展开/折叠/定位控制
+const expandAll = ref(false)
+const collapseAll = ref(false)
+const locateId = ref(0)
+provide('treeExpandAll', expandAll)
+provide('treeCollapseAll', collapseAll)
+provide('treeLocateId', locateId)
+
+function doExpandAll() { expandAll.value = !expandAll.value; collapseAll.value = false; setTimeout(() => expandAll.value = false, 100) }
+function doCollapseAll() { collapseAll.value = !collapseAll.value; expandAll.value = false; setTimeout(() => collapseAll.value = false, 100) }
+function doLocate() { if (article.value) locateId.value = article.value.id; setTimeout(() => locateId.value = 0, 200) }
 
 // 上一/下一篇 & 相关推荐
 const { prevArticle, nextArticle, relatedArticles } = useArticleNav(tree, articleId)
@@ -129,7 +141,25 @@ function onContentClick(e: MouseEvent) {
         :style="{ visibility: ui.focusMode ? 'hidden' : 'visible' }"
       >
         <div class="p-4 pt-3">
-          <h2 class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase mb-3">文章目录</h2>
+          <!-- 工具栏 -->
+          <div class="flex items-center gap-1 mb-3">
+            <h2 class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase flex-1">文章目录</h2>
+            <button
+              class="w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors text-11px"
+              title="定位当前文章"
+              @click="doLocate"
+            >◎</button>
+            <button
+              class="w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors text-11px"
+              title="展开全部"
+              @click="doExpandAll"
+            >+</button>
+            <button
+              class="w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors text-11px"
+              title="折叠全部"
+              @click="doCollapseAll"
+            >−</button>
+          </div>
           <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" :active-id="article?.id" />
         </div>
       </aside>
