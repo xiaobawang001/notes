@@ -24,21 +24,21 @@ function cycleFontSize() {
   const idx = fontSizeOrder.indexOf(ui.fontSize)
   const next = fontSizeOrder[(idx + 1) % fontSizeOrder.length]
   ui.setFontSize(next)
-  message.info(`字号：${fontSizeLabel[next]}`)
+  message.success(`字号：${fontSizeLabel[next]}`)
 }
 function cycleContentWidth() {
   const idx = widthOrder.indexOf(ui.contentWidth)
   const next = widthOrder[(idx + 1) % widthOrder.length]
   ui.setContentWidth(next)
-  message.info(`宽度：${widthLabel[next]}`)
+  message.success(`宽度：${widthLabel[next]}`)
 }
 function toggleFocus() {
   ui.toggleFocusMode()
-  message.info(ui.focusMode ? '专注模式已开启' : '专注模式已关闭')
+  message.success(ui.focusMode ? '专注模式已开启' : '专注模式已关闭')
 }
 function toggleDark() {
   ui.toggleDarkMode()
-  message.info(ui.darkMode ? '深色模式已开启' : '浅色模式已开启')
+  message.success(ui.darkMode ? '深色模式已开启' : '浅色模式已开启')
 }
 </script>
 
