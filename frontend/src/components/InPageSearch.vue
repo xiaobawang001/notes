@@ -1,57 +1,163 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
+import { Search, ArrowUp, ArrowDown, X } from 'lucide-vue-next'
+import {
+  runInPageSearch, gotoNextMatch, gotoPrevMatch,
+  clearInPageSearch, getMatchCount, getCurrentMatchIndex,
+} from '~/composables/useInPageSearch'
 
+const route = useRoute()
+const open = ref(false)
 const query = ref('')
-const hasMatches = ref(false)
+const matchCount = ref(0)
+const inputRef = ref<HTMLInputElement | null>(null)
 
-function search() {
-  if (!query.value.trim()) return clearHighlights()
-  const text = query.value.trim().toLowerCase()
-  const container = document.querySelector('.vp-doc')
-  if (!container) return
-  clearHighlights()
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
-  const matches: Range[] = []
-  let node
-  while ((node = walker.nextNode())) {
-    const idx = node.textContent!.toLowerCase().indexOf(text)
-    if (idx !== -1) {
-      const range = document.createRange()
-      range.setStart(node, idx)
-      range.setEnd(node, idx + text.length)
-      matches.push(range)
-    }
+const counterText = ref('')
+
+function refreshSearch() {
+  matchCount.value = runInPageSearch(query.value)
+  counterText.value = !query.value.trim() ? ''
+    : !matchCount.value ? '无匹配'
+    : `${getCurrentMatchIndex()} / ${matchCount.value}`
+}
+
+function openPanel() {
+  open.value = true
+  nextTick(() => inputRef.value?.focus())
+}
+function closePanel() {
+  open.value = false
+  query.value = ''
+  clearInPageSearch()
+  matchCount.value = 0
+  counterText.value = ''
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+    e.preventDefault()
+    open.value ? closePanel() : openPanel()
+    return
   }
-  matches.forEach((r, i) => {
-    const mark = document.createElement('mark')
-    mark.className = 'in-page-highlight'
-    if (i === 0) mark.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    r.surroundContents(mark)
-  })
-  hasMatches.value = matches.length > 0
+  if (!open.value) return
+  if (e.key === 'Escape') { e.preventDefault(); closePanel(); return }
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    if (e.shiftKey) gotoPrevMatch(); else gotoNextMatch()
+    matchCount.value = getMatchCount()
+    counterText.value = !matchCount.value ? '无匹配' : `${getCurrentMatchIndex()} / ${matchCount.value}`
+  }
 }
 
-function clearHighlights() {
-  document.querySelectorAll('.in-page-highlight').forEach((m) => {
-    const parent = m.parentNode
-    if (parent) {
-      parent.replaceChild(document.createTextNode(m.textContent || ''), m)
-      parent.normalize()
-    }
-  })
-  hasMatches.value = false
-}
+watch(query, () => refreshSearch())
+watch(() => route.path, () => closePanel())
+
+onMounted(() => document.addEventListener('keydown', onKeydown, true))
+onUnmounted(() => { document.removeEventListener('keydown', onKeydown, true); clearInPageSearch() })
 </script>
 
 <template>
-  <div class="flex items-center gap-2 mb-4">
-    <input v-model="query" type="text" placeholder="在文中搜索..." class="w-48 px-3 py-1.5 text-13px rounded-md border border-[#e7e9e8] dark:border-[#383940] bg-white dark:bg-[#2e2f35] text-main outline-none focus:border-[#00b96b]" @keydown.enter="search" @keydown.escape="clearHighlights" />
-    <button class="text-12px px-2.5 py-1 rounded bg-[#00b96b]/10 text-[#00b96b] hover:bg-[#00b96b]/20 border-none cursor-pointer" @click="search">搜索</button>
-    <button v-if="hasMatches" class="text-12px px-2 py-1 text-[#8a8f8d] border-none bg-transparent cursor-pointer" @click="clearHighlights">清除</button>
+  <div class="in-page-search" :class="{ 'is-open': open }">
+    <!-- 触发按钮 -->
+    <button
+      v-show="!open"
+      class="isp-trigger"
+      title="文内搜索 (Ctrl+Shift+F)"
+      @click="openPanel"
+    >
+      <Search :size="18" />
+    </button>
+
+    <!-- 搜索面板 -->
+    <div v-show="open" class="isp-panel" role="search" aria-label="文内搜索">
+      <input
+        ref="inputRef"
+        v-model="query"
+        class="isp-input"
+        placeholder="搜索当前页…"
+      />
+      <span class="isp-counter">{{ counterText }}</span>
+      <button class="isp-btn" title="上一个" @click="gotoPrevMatch(); refreshSearch()"><ArrowUp :size="14" /></button>
+      <button class="isp-btn" title="下一个" @click="gotoNextMatch(); refreshSearch()"><ArrowDown :size="14" /></button>
+      <button class="isp-btn" title="关闭" @click="closePanel"><X :size="14" /></button>
+    </div>
   </div>
 </template>
 
 <style scoped>
-:deep(.in-page-highlight) { background: #ffeb3b; color: #000; border-radius: 2px; padding: 0 1px; }
-html.dark :deep(.in-page-highlight) { background: #ffd54f; }
+.in-page-search {
+  position: fixed;
+  right: 24px;
+  bottom: 84px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.isp-trigger {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--yuque-border-light);
+  border-radius: 8px;
+  background: var(--yuque-paper-bg);
+  color: var(--yuque-text-secondary);
+  box-shadow: var(--yuque-shadow-paper);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.isp-trigger:hover {
+  background: var(--yuque-brand-soft);
+  border-color: var(--yuque-brand);
+  color: var(--yuque-brand);
+}
+.isp-panel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--yuque-border-light);
+  border-radius: 10px;
+  background: var(--yuque-paper-bg);
+  box-shadow: var(--yuque-shadow-paper);
+}
+.isp-input {
+  width: 180px;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--yuque-text);
+  background: transparent;
+  padding: 2px 4px;
+}
+.isp-input::placeholder { color: var(--yuque-text-secondary); }
+.isp-counter {
+  min-width: 52px;
+  font-size: 12px;
+  color: var(--yuque-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+.isp-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--yuque-text-secondary);
+  transition: all 0.15s;
+}
+.isp-btn:hover { background: var(--yuque-brand-soft); color: var(--yuque-brand); }
+@media (max-width: 767px) {
+  .in-page-search { right: 16px; bottom: 76px; }
+  .isp-input { width: 140px; }
+}
 </style>

@@ -165,7 +165,6 @@ function onContentClick(e: MouseEvent) {
 
               <template v-else-if="article">
                 <NavBreadcrumb :items="breadcrumbItems" />
-                <InPageSearch v-if="renderedContent" />
 
                 <div class="mb-4 flex items-center gap-2 text-13px text-secondary">
                   <NTag v-if="article.status === 'draft'" type="error" size="small" round>草稿</NTag>
