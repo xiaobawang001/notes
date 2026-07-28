@@ -1,12 +1,17 @@
-"""认证服务：注册、登录、Token 验证"""
-from app.repositories import get_user_repo
+"""认证服务：注册、登录、Token 验证
+
+⚠️ 始终使用 PostgreSQL 存储用户数据，不受后端切换影响。
+Coze 仅用于业务数据（笔记），不存储用户凭证。"""
+from app.repositories.postgres.user_repo import PostgresUserRepo
 from app.core.security import hash_password, verify_password, create_access_token
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse
 
 
 class AuthService:
+    """认证服务——固定使用 PostgreSQL，不跟随后端切换"""
+
     def __init__(self, user_repo=None):
-        self.user_repo = user_repo if user_repo is not None else get_user_repo()
+        self.user_repo = user_repo if user_repo is not None else PostgresUserRepo()
 
     async def register(self, req: RegisterRequest) -> TokenResponse:
         """用户注册：检查用户名唯一 → bcrypt 哈希密码 → 创建用户（默认 user 角色）→ 返回 Token"""

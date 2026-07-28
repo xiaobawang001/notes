@@ -1,5 +1,10 @@
 """认证相关 Pydantic Schema"""
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, Field, field_validator
+
+# 邮箱格式正则（基础校验）
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 
 class RegisterRequest(BaseModel):
@@ -7,6 +12,13 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="用户名")
     password: str = Field(..., min_length=6, max_length=100, description="密码")
     email: str | None = Field(default=None, max_length=200, description="邮箱（可选）")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str | None) -> str | None:
+        if v is not None and v.strip() and not EMAIL_PATTERN.match(v):
+            raise ValueError("邮箱格式不正确")
+        return v.strip() if v else None
 
 
 class LoginRequest(BaseModel):

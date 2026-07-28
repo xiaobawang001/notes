@@ -92,11 +92,12 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# 注册路由：双前缀（PG 主 + Coze 备用）
+# 注册路由：双前缀
+#   PG: 认证 + 业务数据 + 管理
+#   Coze: 仅业务数据（认证始终走 PostgreSQL）
 app.include_router(auth.router, prefix=PG_PREFIX)
 app.include_router(notes.router, prefix=PG_PREFIX)
 app.include_router(admin_router, prefix=PG_PREFIX)
-app.include_router(auth.router, prefix=COZE_PREFIX)
 app.include_router(notes.router, prefix=COZE_PREFIX)
 
 

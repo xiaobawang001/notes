@@ -74,16 +74,18 @@ class CozeUserRepo:
     async def create(
         self, username: str, password_hash: str, email: str | None = None, role: str = "user"
     ) -> dict | None:
-        """创建新用户，返回创建后的用户信息"""
+        """创建新用户，返回创建后的用户信息
+
+        注意：随着认证逐步迁移到 PostgreSQL，此方法仅用于 PG→Coze 同步场景。
+        """
         client = await self._client()
         fields = user_to_insert_fields(username, password_hash, email, role)
-        insert_failed = False
         try:
             result = await client.insert(self.db_id, {"insert_rows": [fields]})
             if result.get("affected_rows", 0) == 0:
                 return None
         except Exception:
-            insert_failed = True
+            return None  # 插入失败立即返回，不重试（避免误匹配并发创建的旧用户）
 
         for i in range(6):
             try:
