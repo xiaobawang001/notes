@@ -36,12 +36,21 @@ function getCategoryName(parentId: number): string {
 const expandAll = ref(false)
 const collapseAll = ref(false)
 const locateId = ref(0)
+const allExpanded = ref(false)
 provide('treeExpandAll', expandAll)
 provide('treeCollapseAll', collapseAll)
 provide('treeLocateId', locateId)
 
-function doExpandAll() { expandAll.value = !expandAll.value; collapseAll.value = false; setTimeout(() => expandAll.value = false, 100) }
-function doCollapseAll() { collapseAll.value = !collapseAll.value; expandAll.value = false; setTimeout(() => collapseAll.value = false, 100) }
+function toggleAll() {
+  allExpanded.value = !allExpanded.value
+  if (allExpanded.value) {
+    expandAll.value = true; collapseAll.value = false
+  } else {
+    collapseAll.value = true; expandAll.value = false
+  }
+  setTimeout(() => { expandAll.value = false; collapseAll.value = false }, 100)
+}
+function doLocate() { locateId.value = Date.now(); setTimeout(() => locateId.value = 0, 300) }
 
 onMounted(async () => {
   try {
@@ -67,18 +76,23 @@ onMounted(async () => {
       >
         <div class="p-4 pt-3">
           <!-- 工具栏 -->
-          <div class="flex items-center gap-1 mb-3">
-            <h2 class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase flex-1">目录</h2>
+          <div class="flex items-center gap-1 mb-3 pb-2 border-b border-[var(--yuque-border-light)]">
+            <h2 class="text-15px font-semibold text-[var(--yuque-text)] flex-1">目录</h2>
             <button
-              class="w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors text-11px"
-              title="展开全部"
-              @click="doExpandAll"
-            >+</button>
+              class="w-7 h-7 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
+              title="定位到当前文档"
+              @click="doLocate"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>
+            </button>
             <button
-              class="w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors text-11px"
-              title="折叠全部"
-              @click="doCollapseAll"
-            >−</button>
+              class="w-7 h-7 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
+              :title="allExpanded ? '折叠全部分类' : '展开全部分类'"
+              @click="toggleAll"
+            >
+              <svg v-if="!allExpanded" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
           </div>
           <NSpin :show="loading" size="small">
             <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" />
