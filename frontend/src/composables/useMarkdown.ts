@@ -83,7 +83,7 @@ export function useMarkdown() {
     return marked.parse(content || '') as string
   }
 
-  function renderCharts(container: HTMLElement) {
+  async function renderCharts(container: HTMLElement) {
     const mermaidBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="mermaid"]')
     for (const block of mermaidBlocks) {
       const div = document.createElement('div')
@@ -94,56 +94,31 @@ export function useMarkdown() {
     if (mermaidBlocks.length) {
       import('mermaid').then((m) => { m.default.run({ nodes: document.querySelectorAll('.mermaid') }) })
     }
-    // ── PlantUML deflate+base64url 编码 ──
-    async function encodePlantUml(source: string): Promise<string> {
-      const encoder = new TextEncoder()
-      const data = encoder.encode(source)
-      // 使用浏览器原生 CompressionStream（Chrome 80+, Firefox 113+, Safari 16.4+）
-      const cs = new CompressionStream('deflate-raw')
-      const writer = cs.writable.getWriter()
-      writer.write(data)
-      writer.close()
-      const reader = cs.readable.getReader()
-      const chunks: Uint8Array[] = []
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-      }
-      // 合并 chunks 并合并所有字节
-      const totalLen = chunks.reduce((sum, c) => sum + c.length, 0)
-      const merged = new Uint8Array(totalLen)
-      let offset = 0
-      for (const c of chunks) { merged.set(c, offset); offset += c.length }
-      // base64url（无 padding）
-      return btoa(String.fromCharCode(...merged))
-        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-    }
-
     const krokiBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="graphviz"], .chart-wrapper[data-lang="plantuml"]')
     for (const block of krokiBlocks) {
       const lang = block.getAttribute('data-lang') || 'graphviz'
-      const img = document.createElement('img')
-      img.className = 'kroki-chart'
-      img.alt = `${lang} diagram`
-      img.loading = 'lazy'
       const source = block.textContent || ''
-
       if (lang === 'plantuml') {
-        encodePlantUml(source).then((encoded) => {
-          img.src = `https://kroki.io/${lang}/svg/${encoded}`
-        }).catch(() => {
-          img.alt = 'PlantUML 渲染失败（浏览器不支持 deflate 压缩）'
-          img.style.opacity = '0.5'
-        })
+        // PlantUML 使用自定义 base64 编码（deflate + encode6bit），不是标准 base64
+        const { encode } = await import('plantuml-encoder')
+        const img = document.createElement('img')
+        img.className = 'kroki-chart'
+        img.alt = 'PlantUML 图表'
+        img.loading = 'lazy'
+        img.src = `https://kroki.io/plantuml/svg/${encode(source)}`
+        img.onerror = () => { img.style.display = 'none' }
+        block.replaceWith(img)
       } else {
         // graphviz: 纯 base64
+        const img = document.createElement('img')
+        img.className = 'kroki-chart'
+        img.alt = `${lang} diagram`
+        img.loading = 'lazy'
         const bytes = new TextEncoder().encode(source)
         img.src = `https://kroki.io/${lang}/svg/${btoa(String.fromCharCode(...bytes))}`
+        img.onerror = () => { img.style.display = 'none' }
+        block.replaceWith(img)
       }
-
-      img.onerror = () => { img.style.display = 'none' }
-      block.replaceWith(img)
     }
   }
 

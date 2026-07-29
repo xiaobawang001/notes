@@ -127,7 +127,7 @@ watch(renderedContent, () => {
   nextTick(() => {
     const el = document.querySelector('.vp-doc') as HTMLElement
     if (!el) return
-    renderCharts(el)
+    renderCharts(el).catch(() => {})
     const hash = window.location.hash
     if (hash) {
       const target = document.getElementById(hash.slice(1))
