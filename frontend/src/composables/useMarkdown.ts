@@ -1,59 +1,84 @@
-import { nextTick } from 'vue'
-import { marked } from 'marked'
-import hljs from 'highlight.js'
+/**
+ * Markdown 渲染 composable — 基于 Vditor
+ * 替换 marked + highlight.js，使用 Vditor.md2html() 解析，
+ * 后处理代码块/图表以保留自定义功能。
+ */
+import Vditor from 'vditor'
 
 const CHART_LANGS = ['mermaid', 'graphviz', 'plantuml']
 const HIGHLIGHT_RE = /\/\/\s*\[!code\s+(highlight|hl)\]\s*$/
 
+// ── 工具函数 ──
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-const renderer = new marked.Renderer()
+/** 将 Vditor 生成的 <pre><code> 包装为自定义 code-block-wrapper */
+function wrapCodeBlock(pre: HTMLElement): string {
+  const code = pre.querySelector('code')
+  if (!code) return pre.outerHTML
 
-renderer.heading = function ({ text, depth }: any) {
-  const slug = text.toLowerCase().replace(/<[^>]*>/g, '').replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-+|-+$/g, '')
-  return `<h${depth} id="${slug}">${text}<a class="heading-anchor" href="#${slug}" aria-hidden="true">#</a></h${depth}>`
-}
+  // 提取语言
+  const classMatch = code.className.match(/language-(\w+)/)
+  const lang = classMatch?.[1] || ''
 
-renderer.code = function ({ text, lang }: any) {
-  const rawCode = text || ''
-  const langName = (lang || '').toLowerCase()
-
-  if (CHART_LANGS.includes(langName)) {
-    return `<div class="chart-wrapper" data-lang="${langName}">${escapeHtml(rawCode)}</div>`
+  // 图表语言 → 包裹为 chart-wrapper，由 renderCharts 处理
+  if (lang && CHART_LANGS.includes(lang)) {
+    const rawCode = code.textContent || ''
+    return `<div class="chart-wrapper" data-lang="${lang}">${escapeHtml(rawCode)}</div>`
   }
 
-  const lines = rawCode.split('\n')
+  // 提取源码（从 hljs 渲染后的 HTML 中还原纯文本）
+  const rawLines: string[] = []
+  code.querySelectorAll('.code-line, .hljs-ln-line').forEach((line) => {
+    rawLines.push(line.textContent || '')
+  })
+  // 如果没有 .code-line span，直接取 textContent 按行分割
+  const sourceLines = rawLines.length > 0 ? rawLines : (code.textContent || '').split('\n')
+  // 去掉末尾空行
+  while (sourceLines.length && !sourceLines[sourceLines.length - 1].trim()) sourceLines.pop()
+
+  // 行高亮标记处理
   const highlightedLines = new Set<number>()
   const cleanLines: string[] = []
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] && HIGHLIGHT_RE.test(lines[i])) {
+  for (let i = 0; i < sourceLines.length; i++) {
+    if (sourceLines[i] && HIGHLIGHT_RE.test(sourceLines[i])) {
       highlightedLines.add(i)
-      cleanLines.push(lines[i].replace(HIGHLIGHT_RE, '').replace(/\s+$/, ''))
+      cleanLines.push(sourceLines[i].replace(HIGHLIGHT_RE, '').replace(/\s+$/, ''))
     } else {
-      cleanLines.push(lines[i])
+      cleanLines.push(sourceLines[i])
     }
   }
-  const cleanCode = cleanLines.join('\n')
 
+  // 重新用 Vditor 高亮纯代码（保持语法着色）
+  const cleanCode = cleanLines.join('\n')
   let highlighted: string
-  if (langName) {
-    const validLang = hljs.getLanguage(langName) ? langName : 'plaintext'
-    highlighted = hljs.highlight(cleanCode, { language: validLang, ignoreIllegals: true }).value
+  if (lang && lang !== 'plaintext') {
+    try {
+      // Vditor 内置 highlight.js，直接用它
+      const hljs = (window as any).hljs
+      if (hljs?.getLanguage?.(lang)) {
+        highlighted = hljs.highlight(cleanCode, { language: lang, ignoreIllegals: true }).value
+      } else {
+        highlighted = escapeHtml(cleanCode)
+      }
+    } catch {
+      highlighted = escapeHtml(cleanCode)
+    }
   } else {
     highlighted = escapeHtml(cleanCode)
   }
 
+  // 构建代码行（含行号和高亮标记）
   const codeLines = highlighted.split('\n')
   const wrappedLines = codeLines.map((lineHtml, i) => {
     const hlClass = highlightedLines.has(i) ? ' highlighted' : ''
     return `<span class="code-line${hlClass}">${lineHtml || ' '}</span>`
   })
 
-  const displayLang = langName || 'code'
+  const displayLang = lang || 'code'
   return [
-    `<div class="code-block-wrapper" data-lang="${displayLang}">`,
+    `<div class="code-block-wrapper" data-lang="${escapeHtml(displayLang)}">`,
     `  <div class="code-header">`,
     `    <span class="code-lang-label">${escapeHtml(displayLang)}</span>`,
     `    <div class="code-actions">`,
@@ -70,20 +95,59 @@ renderer.code = function ({ text, lang }: any) {
     `    </div>`,
     `  </div>`,
     `  <div class="code-body">`,
-    `    <pre><code class="hljs${langName ? ' language-' + langName : ''}">${wrappedLines.join('\n')}</code></pre>`,
+    `    <pre><code class="hljs${lang ? ' language-' + lang : ''}">${wrappedLines.join('\n')}</code></pre>`,
     `  </div>`,
     `</div>`,
   ].join('\n')
 }
 
-marked.use({ renderer })
+/** 后处理 Vditor 输出的 HTML */
+function postProcess(html: string): string {
+  // 用临时 DOM 解析
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
 
-export function useMarkdown() {
-  function render(content: string): string {
-    return marked.parse(content || '') as string
+  // 处理所有代码块
+  const pres = Array.from(tmp.querySelectorAll('pre'))
+  for (const pre of pres) {
+    const code = pre.querySelector('code')
+    if (!code) continue
+
+    const classMatch = code.className.match(/language-(\w+)/)
+    const lang = classMatch?.[1] || ''
+
+    if (lang && CHART_LANGS.includes(lang)) {
+      // 图表 → chart-wrapper
+      const rawCode = code.textContent || ''
+      const wrapper = document.createElement('div')
+      wrapper.className = 'chart-wrapper'
+      wrapper.setAttribute('data-lang', lang)
+      wrapper.textContent = rawCode
+      pre.replaceWith(wrapper)
+    } else {
+      // 普通代码块 → 用 wrapper HTML 替换
+      const wrapper = document.createElement('div')
+      wrapper.innerHTML = wrapCodeBlock(pre)
+      pre.replaceWith(wrapper.firstElementChild || pre)
+    }
   }
 
+  return tmp.innerHTML
+}
+
+export function useMarkdown() {
+  /** 渲染 Markdown → HTML（异步，Vditor.md2html 返回 Promise） */
+  async function render(content: string): Promise<string> {
+    if (!content) return ''
+    const html = await Vditor.md2html(content || '', {
+      mode: 'light',
+    })
+    return postProcess(html)
+  }
+
+  /** 渲染图表（mermaid / graphviz / plantuml） */
   async function renderCharts(container: HTMLElement) {
+    // ── Mermaid ──
     const mermaidBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="mermaid"]')
     for (const block of mermaidBlocks) {
       const div = document.createElement('div')
@@ -94,7 +158,8 @@ export function useMarkdown() {
     if (mermaidBlocks.length) {
       import('mermaid').then((m) => { m.default.run({ nodes: document.querySelectorAll('.mermaid') }) })
     }
-    // ── Graphviz：本地 WASM 渲染 ──
+
+    // ── Graphviz：本地 WASM ──
     const graphvizBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="graphviz"]')
     if (graphvizBlocks.length) {
       try {
@@ -109,8 +174,8 @@ export function useMarkdown() {
             wrapper.className = 'graphviz-diagram'
             wrapper.appendChild(svg)
             block.replaceWith(wrapper)
-          } catch (e) {
-            block.replaceWith(document.createTextNode(`[Graphviz 渲染失败]`))
+          } catch {
+            block.replaceWith(document.createTextNode('[Graphviz 渲染失败]'))
           }
         }
       } catch (e) {

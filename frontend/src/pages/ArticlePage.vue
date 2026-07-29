@@ -66,7 +66,7 @@ function doLocate() {
 const { prevArticle, nextArticle, relatedArticles } = useArticleNav(tree, articleId)
 
 const idOrSlug = computed(() => route.params.idOrSlug as string)
-const renderedContent = computed(() => render(article.value?.content || ''))
+const renderedContent = ref('') // Vditor 异步渲染
 
 // Breadcrumb
 const breadcrumbItems = ref<{ label: string; to?: string }[]>([])
@@ -117,6 +117,8 @@ async function load() {
     tree.value = t
     activeAncestors.value = findAncestors(t, article.value.id)
     buildBreadcrumb()
+    // Vditor 异步渲染 Markdown
+    renderedContent.value = await render(article.value.content || '')
   } catch { error.value = true } finally { loading.value = false }
 }
 
