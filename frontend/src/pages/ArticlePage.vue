@@ -218,16 +218,16 @@ function onContentClick(e: MouseEvent) {
               </div>
 
               <template v-else-if="article">
-                <NavBreadcrumb :items="breadcrumbItems" />
+                <NavBreadcrumb :items="breadcrumbItems" class="mb-6" />
 
-                <div class="mb-4 flex items-center gap-2 text-13px text-secondary">
+                <div class="mb-6 flex items-center gap-2 text-13px text-secondary">
                   <NTag v-if="article.status === 'draft'" type="error" size="small" round>草稿</NTag>
                   <NTag v-if="article.pinned" type="success" size="small" round>置顶</NTag>
                   <span>{{ article.word_count }} 字</span>
                   <span>更新于 {{ new Date(article.updated_at).toLocaleDateString() }}</span>
                 </div>
 
-                <div class="paper! p-8">
+                <div class="paper! px-8 py-7 pb-10 border border-[var(--yuque-border-light)]">
                   <article
                     class="vp-doc"
                     :style="{ fontSize: 'var(--blog-doc-font-size)' }"

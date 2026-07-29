@@ -131,14 +131,15 @@ onMounted(async () => {
 
       <!-- Main -->
       <main class="flex-1 ml-[var(--vp-sidebar-width)] min-h-[calc(100vh-56px)]">
-        <div class="mx-auto px-6 py-6" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
-          <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
-          <NSpin :show="loading">
-            <div class="grid gap-3">
-            <article
-              v-for="a in articles"
-              :key="a.id"
-              class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow"
+        <div class="py-6 flex justify-center">
+          <div :style="{ maxWidth: 'var(--blog-content-max-width)', width: '100%' }" class="px-6">
+            <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
+            <NSpin :show="loading">
+              <div class="grid gap-3">
+                <article
+                  v-for="a in articles"
+                  :key="a.id"
+                  class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow border border-[var(--yuque-border-light)]"
               @click="router.push(`/article/${a.id}`)"
             >
               <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
@@ -154,7 +155,8 @@ onMounted(async () => {
             </div>
           </NSpin>
         </div>
-      </main>
+      </div>
+    </main>
     </div>
     <BackToTop />
     <SiteFooter />

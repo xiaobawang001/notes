@@ -94,8 +94,6 @@ onUnmounted(() => {
 
 <style scoped>
 .toc-wrapper {
-  position: sticky;
-  top: calc(var(--vp-nav-height, 56px) + 24px);
   width: var(--vp-sidebar-width, 280px);
   max-height: calc(100vh - var(--vp-nav-height, 56px) - 48px);
   overflow-y: auto;
