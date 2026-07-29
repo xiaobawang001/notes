@@ -205,11 +205,11 @@ function onContentClick(e: MouseEvent) {
         class="flex-1 ml-[var(--vp-sidebar-width)] min-h-[calc(100vh-56px)]"
         :style="{ marginLeft: ui.focusMode ? '0' : 'var(--vp-sidebar-width)' }"
       >
-        <div class="flex gap-8 justify-center px-6 py-6">
+        <div class="flex gap-0 justify-center min-h-full">
           <!-- 正文区 -->
           <div
-            class="w-full min-w-0"
-            :style="{ maxWidth: ui.focusMode ? 'var(--blog-content-max-width)' : 'var(--blog-content-max-width)' }"
+            class="w-full min-w-0 py-6"
+            :style="{ maxWidth: 'var(--blog-content-max-width)' }"
           >
             <NSpin :show="loading" size="large">
               <div v-if="error" class="text-center py-16">
@@ -277,7 +277,7 @@ function onContentClick(e: MouseEvent) {
           </div>
 
           <!-- 右侧目录 -->
-          <div v-if="!ui.focusMode && article" class="shrink-0">
+          <div v-if="!ui.focusMode && article" class="shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] px-4 pt-6 min-h-[calc(100vh-56px)]">
             <DocOutline content-selector=".vp-doc" />
           </div>
         </div>
