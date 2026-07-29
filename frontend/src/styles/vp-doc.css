@@ -1,0 +1,164 @@
+/* ========== 正文排版样式 (Vditor 渲染输出) ========== */
+
+/* ---------- 代码块增强（行号 / 复制按钮 / 语言标签） ---------- */
+.vp-doc .vditor-reset {
+  font-size: var(--blog-doc-font-size, 16px);
+  line-height: 1.8;
+  color: var(--yuque-text);
+  word-break: break-word;
+}
+
+/* 标题 */
+.vp-doc .vditor-reset h1,
+.vp-doc .vditor-reset h2,
+.vp-doc .vditor-reset h3,
+.vp-doc .vditor-reset h4,
+.vp-doc .vditor-reset h5,
+.vp-doc .vditor-reset h6 {
+  margin: 1.6em 0 0.6em;
+  font-weight: 600;
+  color: var(--yuque-text);
+  line-height: 1.4;
+  border-bottom: none;
+}
+.vp-doc .vditor-reset h1 { font-size: 2em; }
+.vp-doc .vditor-reset h2 { font-size: 1.65em; }
+.vp-doc .vditor-reset h3 { font-size: 1.35em; }
+.vp-doc .vditor-reset h4 { font-size: 1.15em; }
+.vp-doc .vditor-reset h5 { font-size: 1em; }
+.vp-doc .vditor-reset h6 { font-size: 0.9em; color: var(--yuque-text-secondary); }
+
+/* 段落 */
+.vp-doc .vditor-reset p {
+  margin: 0.6em 0;
+}
+
+/* 链接 */
+.vp-doc .vditor-reset a {
+  color: var(--yuque-brand);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.vp-doc .vditor-reset a:hover {
+  border-bottom-color: var(--yuque-brand);
+}
+
+/* 引用 */
+.vp-doc .vditor-reset blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--yuque-brand);
+  background: var(--yuque-brand-soft);
+  border-radius: 0 4px 4px 0;
+}
+
+/* 行内代码 */
+.vp-doc .vditor-reset code:not(.hljs) {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.88em;
+  background: var(--yuque-code-header-bg);
+  color: var(--yuque-brand);
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+/* 代码块容器 */
+.vp-doc .vditor-reset pre {
+  margin: 1em 0;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--yuque-border-light);
+  background: var(--yuque-code-header-bg);
+}
+.vp-doc .vditor-reset pre code.hljs {
+  display: block;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: 0.88em;
+  line-height: 1.6;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  background: transparent !important;
+  color: var(--yuque-text);
+}
+
+/* 代码块行号 */
+.vp-doc .vditor-reset .hljs-ln {
+  border-collapse: collapse;
+}
+.vp-doc .vditor-reset .hljs-ln td {
+  padding: 0;
+  line-height: 1.6;
+}
+.vp-doc .vditor-reset .hljs-ln td.hljs-ln-numbers {
+  padding-right: 0.8em;
+  text-align: right;
+  color: var(--yuque-text-secondary);
+  user-select: none;
+  border-right: 1px solid var(--yuque-border-light);
+}
+
+/* 表格 */
+.vp-doc .vditor-reset table {
+  width: 100%;
+  margin: 1em 0;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.vp-doc .vditor-reset th,
+.vp-doc .vditor-reset td {
+  padding: 0.5em 0.8em;
+  border: 1px solid var(--yuque-border);
+  text-align: left;
+}
+.vp-doc .vditor-reset th {
+  background: var(--yuque-code-header-bg);
+  font-weight: 600;
+}
+.vp-doc .vditor-reset tr:nth-child(even) td {
+  background: var(--yuque-brand-soft);
+}
+
+/* 列表 */
+.vp-doc .vditor-reset ul,
+.vp-doc .vditor-reset ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+.vp-doc .vditor-reset li {
+  margin: 0.3em 0;
+}
+
+/* 分割线 */
+.vp-doc .vditor-reset hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid var(--yuque-border-light);
+}
+
+/* 图片 */
+.vp-doc .vditor-reset img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+/* 任务列表 */
+.vp-doc .vditor-reset .vditor-task {
+  list-style: none;
+  margin-left: -1.5em;
+}
+.vp-doc .vditor-reset .vditor-task input[type='checkbox'] {
+  margin-right: 0.5em;
+}
+
+/* Mermaid 等图表容器 */
+.vp-doc .vditor-reset .mermaid,
+.vp-doc .vditor-reset .vditor-graphviz,
+.vp-doc .vditor-reset .vditor-mindmap,
+.vp-doc .vditor-reset .vditor-flowchart {
+  margin: 1em 0;
+  text-align: center;
+  overflow-x: auto;
+}

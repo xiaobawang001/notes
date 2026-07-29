@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, watch, provide } from 'vue'
+import { ref, computed, watch, provide, nextTick, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NTag, NSpin } from 'naive-ui'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { NTag, NSpin, NButton, useMessage } from 'naive-ui'
+import { ChevronLeft, ChevronRight, Pencil, Save, X } from 'lucide-vue-next'
+import Vditor from 'vditor'
 import { useArticles } from '~/composables/useArticles'
 import { useCategories } from '~/composables/useCategories'
 import { useArticleNav } from '~/composables/useArticleNav'
 import { useUiStore } from '~/stores/ui'
+import { useAuthStore } from '~/stores/auth'
+import { updateNote } from '~/api/notes'
+import { renderMarkdown, renderCharts } from '~/composables/useMarkdown'
 import type { Note, TreeNode } from '~/types/note'
 import NavBreadcrumb from '~/components/NavBreadcrumb.vue'
 import BackToTop from '~/components/BackToTop.vue'
@@ -16,6 +20,8 @@ import TreeNodeComp from '~/components/TreeNode.vue'
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
+const auth = useAuthStore()
+const message = useMessage()
 const { getArticle } = useArticles()
 const { listCategories } = useCategories()
 
@@ -25,6 +31,17 @@ const loading = ref(true)
 const error = ref(false)
 const tree = ref<TreeNode[]>([])
 const activeAncestors = ref(new Set<number>())
+
+// 编辑/预览模式切换
+const isEditing = ref(false)
+const renderedContent = ref('')
+const contentContainer = ref<HTMLElement | null>(null)
+let vditorInstance: Vditor | null = null
+
+// 权限判断：只有文章作者本人可编辑
+const canEdit = computed(() =>
+  auth.isLoggedIn() && article.value?.user_id === auth.user?.id
+)
 
 // 展开/折叠/定位控制
 const expandAll = ref(false)
@@ -98,7 +115,71 @@ function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
   return ancestors
 }
 
+// 进入编辑模式（挂载 Vditor 编辑器）
+async function enterEdit() {
+  destroyVditor()
+  isEditing.value = true
+  await nextTick()
+  const el = document.getElementById('vditor-editor')
+  if (!el) return
+  vditorInstance = new Vditor(el, {
+    mode: 'ir',
+    value: article.value?.content || '',
+    height: 'auto',
+    minHeight: 500,
+    toolbar: [
+      'headings', 'bold', 'italic', 'strike', '|',
+      'quote', 'list', 'ordered-list', 'check', 'code', 'inline-code', 'link', 'table', '|',
+      'undo', 'redo', 'fullscreen', 'edit-mode',
+    ],
+    placeholder: '开始写作...',
+    cache: { enable: false },
+  })
+}
+
+// 销毁 Vditor 实例
+function destroyVditor() {
+  if (vditorInstance) {
+    try { vditorInstance.destroy() } catch { /* ignore */ }
+    vditorInstance = null
+  }
+}
+
+// 保存编辑
+async function saveEdit() {
+  if (!vditorInstance || !article.value) return
+  const content = vditorInstance.getValue()
+  try {
+    await updateNote(article.value.id, { content })
+    article.value.content = content
+    message.success('保存成功')
+    isEditing.value = false
+    destroyVditor()
+    await renderContentNow(content)
+  } catch {
+    message.error('保存失败')
+  }
+}
+
+// 取消编辑
+function cancelEdit() {
+  isEditing.value = false
+  destroyVditor()
+}
+
+// 渲染 Markdown 并刷新图表
+async function renderContentNow(content: string) {
+  renderedContent.value = await renderMarkdown(content)
+  await nextTick()
+  if (contentContainer.value) {
+    renderCharts(contentContainer.value)
+  }
+}
+
 async function load() {
+  // 切文章时重置编辑状态
+  destroyVditor()
+  isEditing.value = false
   loading.value = true; error.value = false
   try {
     article.value = await getArticle(idOrSlug.value)
@@ -108,10 +189,16 @@ async function load() {
     tree.value = t
     activeAncestors.value = findAncestors(t, article.value.id)
     buildBreadcrumb()
+    await renderContentNow(article.value.content)
   } catch { error.value = true } finally { loading.value = false }
 }
 
 watch(idOrSlug, load, { immediate: true })
+
+// 组件卸载时清理 Vditor 实例
+onBeforeUnmount(() => {
+  destroyVditor()
+})
 </script>
 
 <template>
@@ -163,8 +250,29 @@ watch(idOrSlug, load, { immediate: true })
               <span>更新于 {{ new Date(article.updated_at).toLocaleDateString() }}</span>
             </div>
 
-            <!-- 原文纯文本展示 -->
-            <pre class="paper! p-6 border border-[var(--yuque-border-light)] text-14px leading-relaxed whitespace-pre-wrap font-mono text-[var(--yuque-text)]">{{ article.content }}</pre>
+            <!-- 仅作者可见：编辑/保存/取消按钮 -->
+            <div v-if="canEdit" class="flex items-center gap-2 mb-4">
+              <NButton v-if="!isEditing" @click="enterEdit" size="small" secondary>
+                <template #icon><Pencil :size="14" /></template>
+                编辑
+              </NButton>
+              <template v-else>
+                <NButton @click="saveEdit" type="primary" size="small">
+                  <template #icon><Save :size="14" /></template>
+                  保存
+                </NButton>
+                <NButton @click="cancelEdit" size="small">
+                  <template #icon><X :size="14" /></template>
+                  取消
+                </NButton>
+              </template>
+            </div>
+
+            <!-- 预览模式：Vditor 渲染的 Markdown HTML -->
+            <div v-if="!isEditing" ref="contentContainer" class="vp-doc" v-html="renderedContent" />
+
+            <!-- 编辑模式：Vditor 编辑器挂载点 -->
+            <div v-else id="vditor-editor" class="vditor-editor-wrapper min-h-[400px]" />
 
             <!-- 上一篇/下一篇 -->
             <div class="mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
