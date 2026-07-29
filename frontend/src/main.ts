@@ -4,7 +4,6 @@ import router from './router'
 import App from './App.vue'
 
 import 'uno.css'
-import 'vditor/dist/index.css'
 import './styles/global.css'
 
 const app = createApp(App)

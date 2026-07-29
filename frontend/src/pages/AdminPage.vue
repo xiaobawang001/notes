@@ -5,7 +5,6 @@ import { getNotes, createNote, updateNote, deleteNote, getCategories } from '~/a
 import api, { setApiPrefix } from '~/api/client'
 import type { Note } from '~/types/note'
 import { NButton, NModal, NDataTable, NSpace, NSelect, NPopconfirm, NCard, NTag, useMessage } from 'naive-ui'
-import MarkdownEditor from '~/components/MarkdownEditor.vue'
 
 const auth = useAuthStore()
 const message = useMessage()
@@ -251,7 +250,7 @@ const columns = [
         <NSelect v-model:value="formType" :options="[{ label: '文章', value: 'article' }, { label: '目录', value: 'folder' }]" />
         <NSelect v-model:value="formStatus" v-if="formType === 'article'" :options="[{ label: '已发布', value: 'published' }, { label: '草稿', value: 'draft' }]" />
         <NSelect v-model:value="formParentId" :options="[{ label: '顶级（无父目录）', value: 0 }, ...tree.map((t: any) => ({ label: t.name, value: t.id, key: 'f-' + t.id }))]" placeholder="父目录" />
-        <MarkdownEditor v-model="formContent" />
+        <textarea v-model="formContent" placeholder="Markdown 内容" class="w-full h-60 p-3 rounded-md border border-[var(--yuque-border)] bg-[var(--yuque-paper-bg)] text-[var(--yuque-text)] font-mono text-13px resize-y outline-none" />
         <NButton type="primary" @click="handleSave">{{ editNote ? '保存' : '创建' }}</NButton>
       </div>
     </NModal>
