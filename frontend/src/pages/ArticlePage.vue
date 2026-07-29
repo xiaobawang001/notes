@@ -139,7 +139,8 @@ watch(renderedContent, () => {
 
 function onContentClick(e: MouseEvent) {
   const target = e.target as HTMLElement
-  if (target.classList.contains('heading-anchor')) {
+  // Vditor 锚点点击：复制链接
+  if (target.classList.contains('vditor-anchor') || target.classList.contains('heading-anchor')) {
     e.preventDefault()
     const url = `${window.location.origin}${window.location.pathname}${target.getAttribute('href')}`
     navigator.clipboard.writeText(url).then(() => message.success('链接已复制'))
@@ -150,22 +151,18 @@ function onContentClick(e: MouseEvent) {
     imageVisible.value = true
     return
   }
-  const copyBtn = target.closest('[data-copy]') as HTMLElement | null
-  if (copyBtn) {
-    const wrapper = copyBtn.closest('.code-block-wrapper') as HTMLElement
-    const text = wrapper?.querySelector('.code-body')?.textContent || ''
-    navigator.clipboard.writeText(text.trim()).then(() => {
-      copyBtn.classList.add('copied')
-      const span = copyBtn.querySelector('span')
-      if (span) span.textContent = '已复制'
-      setTimeout(() => { copyBtn.classList.remove('copied'); if (span) span.textContent = '复制' }, 2000)
-    })
+  // Vditor 代码块按钮：换行
+  const wrapBtn = target.closest('[data-wrap-btn]') as HTMLElement | null
+  if (wrapBtn) {
+    wrapBtn.closest('pre')?.classList.toggle('vditor-code--wrap')
     return
   }
-  const wrapBtn = target.closest('[data-wrap]') as HTMLElement | null
-  if (wrapBtn) { wrapBtn.closest('.code-block-wrapper')?.classList.toggle('wrapped'); return }
-  const foldBtn = target.closest('[data-fold]') as HTMLElement | null
-  if (foldBtn) { foldBtn.closest('.code-block-wrapper')?.classList.toggle('folded'); return }
+  // 折叠
+  const foldBtn = target.closest('[data-fold-btn]') as HTMLElement | null
+  if (foldBtn) {
+    foldBtn.closest('pre')?.classList.toggle('vditor-code--fold')
+    return
+  }
 }
 </script>
 

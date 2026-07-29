@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import Vditor from 'vditor'
 
 const props = defineProps<{ modelValue: string }>()
@@ -12,7 +12,7 @@ onMounted(() => {
   if (!containerRef.value) return
   vditor = new Vditor(containerRef.value, {
     value: props.modelValue,
-    mode: 'sv',           // 分屏：编辑 + 预览
+    mode: 'sv',
     height: 480,
     placeholder: '输入 Markdown 内容...',
     toolbar: [
@@ -22,13 +22,28 @@ onMounted(() => {
       'undo', 'redo', '|',
       'fullscreen', 'outline',
     ],
-    toolbarConfig: {
-      pin: true,
-    },
+    toolbarConfig: { pin: true },
     counter: { enable: true, type: 'text' },
     preview: {
       mode: 'both',
-      hljs: { style: 'github' },
+      hljs: {
+        style: 'github',
+        lineNumber: true,
+        // 自定义代码块操作栏：在 Vditor 内置复制按钮旁加换行/折叠
+        renderMenu(_code: string, copy: string) {
+          const wrapBtn = '<button class="vditor-copy" title="换行切换" data-wrap-btn><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h15a3 3 0 1 1 0 6h-4M16 16l-2 2 2 2M3 18h7"/></svg></button>'
+          const foldBtn = '<button class="vditor-copy" title="折叠代码" data-fold-btn><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+          return `${foldBtn}${wrapBtn}${copy}`
+        },
+      },
+      // 预览渲染完成后注入 Vditor 图表
+      after() {
+        const previewEl = containerRef.value?.querySelector('.vditor-preview') as HTMLElement
+        if (!previewEl) return
+        Vditor.mermaidRender(previewEl)
+        Vditor.graphvizRender(previewEl)
+        Vditor.plantumlRender(previewEl)
+      },
     },
     after() {
       vditor?.setValue(props.modelValue)
@@ -61,7 +76,6 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   overflow: hidden;
 }
-/* Vditor 工具栏适配语雀风格 */
 :deep(.vditor-toolbar) {
   background: var(--yuque-page-bg);
   border-bottom: 1px solid var(--yuque-border);
@@ -72,23 +86,11 @@ onBeforeUnmount(() => {
 :deep(.vditor-toolbar__item:hover) {
   background: var(--yuque-brand-soft);
 }
-:deep(.vditor-toolbar__item--current) {
-  background: var(--yuque-brand-soft);
-  color: var(--yuque-brand);
-}
-/* 编辑区域样式 */
 :deep(.vditor-input) {
   background: var(--yuque-paper-bg);
   color: var(--yuque-text);
 }
 :deep(.vditor-preview) {
   background: var(--yuque-paper-bg);
-}
-/* 预览区适配深色模式 */
-:deep(.vditor-reset) {
-  color: var(--yuque-text);
-  font-size: 14px;
-  line-height: 1.7;
-  padding: 12px;
 }
 </style>
