@@ -65,8 +65,8 @@ html.dark .code-block-lang { background: rgba(255,255,255,0.08); }
 .code-block-btn {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
+  gap: 4px;
+  padding: 4px 8px;
   border: none;
   background: transparent;
   color: var(--vp-code-header-text, #646a73);
@@ -76,9 +76,11 @@ html.dark .code-block-lang { background: rgba(255,255,255,0.08); }
   line-height: 1;
   transition: background 0.15s, color 0.15s;
 }
-.code-block-btn:hover { background: rgba(0,0,0,0.08); color: var(--yuque-text); }
-html.dark .code-block-btn:hover { background: rgba(255,255,255,0.08); }
+.code-block-btn:hover { background: rgba(0,0,0,0.1); color: var(--yuque-text); }
+html.dark .code-block-btn:hover { background: rgba(255,255,255,0.1); }
 .code-block-btn.copied { color: var(--yuque-brand) !important; }
+.code-block-btn.copied svg { display: none; }
+.code-block-btn.copied .label::before { content: '✓ '; }
 
 /* 代码体 */
 .code-block-body { position: relative; overflow: hidden; }
@@ -169,8 +171,15 @@ html.dark .code-block-wrapper.folded .code-block-body::after {
 /* ========== 图表 ========== */
 .vp-doc .mermaid { margin: 20px 0; text-align: center; }
 .vp-doc .mermaid svg { max-width: 100%; height: auto; }
-.vp-doc .graphviz > svg, .vp-doc .vditor-graphviz svg { max-width: 100%; height: auto; display:block; margin:20px auto; }
-.vp-doc .plantuml > object, .vp-doc .language-plantuml img { max-width: 100%; margin: 20px 0; border-radius: 6px; }
+.vp-doc .graphviz > svg, .vp-doc .vditor-graphviz svg,
+.vp-doc .language-graphviz svg { max-width: 100%; height: auto; display:block; margin:20px auto; }
+.vp-doc .plantuml > object, .vp-doc .language-plantuml object,
+.vp-doc .language-plantuml img { max-width: 100%; margin: 20px 0; border-radius: 6px; }
+.vp-doc .language-mindmap { margin: 20px 0; }
+.vp-doc .language-mindmap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.vp-doc .language-flowchart { margin: 20px 0; }
+.vp-doc .language-echarts { margin: 20px 0; }
+.vp-doc .language-echarts > div { max-width: 100% !important; }
 
 /* 深色模式 */
 html.dark .vp-doc { color: #abb2bf; }

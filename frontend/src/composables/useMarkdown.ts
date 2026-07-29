@@ -1,67 +1,90 @@
 /**
  * Markdown 渲染 composable — 基于 Vditor 渲染管线
  *
- * - Vditor.md2html()：Markdown 解析 + 渲染（图表保留 div.language-* 结构）
- * - Vditor.mermaidRender/graphvizRender/plantumlRender：图表渲染
- * - 本地 hljs：高亮代码（避开 Vditor 的 CDN 依赖）
- * - 后处理：把代码块包装为带按钮的 HTML
+ * - Vditor.md2html()：Markdown 解析 + 渲染
+ * - Vditor.*Render：图表渲染 (mermaid/graphviz/plantuml/echarts/mindmap/flowchart)
+ * - 本地 hljs：代码高亮（避开 Vditor CDN 依赖）
+ * - 后处理：代码块包装 + 行号 + 自定义按钮（复制/换行/折叠）
  */
 import Vditor from 'vditor'
 import hljs from 'highlight.js/lib/core'
 
-// 按需加载语言
+// ── hljs 语言注册 ──
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
 import python from 'highlight.js/lib/languages/python'
+import java from 'highlight.js/lib/languages/java'
+import cpp from 'highlight.js/lib/languages/cpp'
+import c from 'highlight.js/lib/languages/c'
+import go_ from 'highlight.js/lib/languages/go'
+import rust from 'highlight.js/lib/languages/rust'
+import php from 'highlight.js/lib/languages/php'
+import ruby from 'highlight.js/lib/languages/ruby'
+import swift from 'highlight.js/lib/languages/swift'
+import kotlin from 'highlight.js/lib/languages/kotlin'
 import bash from 'highlight.js/lib/languages/bash'
 import shell from 'highlight.js/lib/languages/shell'
 import json from 'highlight.js/lib/languages/json'
 import xml from 'highlight.js/lib/languages/xml'
 import css from 'highlight.js/lib/languages/css'
 import scss from 'highlight.js/lib/languages/scss'
+import less from 'highlight.js/lib/languages/less'
 import sql from 'highlight.js/lib/languages/sql'
 import yaml from 'highlight.js/lib/languages/yaml'
+import toml from 'highlight.js/lib/languages/ini' // toml ≈ ini 语法
+import makefile from 'highlight.js/lib/languages/makefile'
+import diff from 'highlight.js/lib/languages/diff'
+import graphql from 'highlight.js/lib/languages/graphql'
 import markdown from 'highlight.js/lib/languages/markdown'
 import dockerfile from 'highlight.js/lib/languages/dockerfile'
 import nginx from 'highlight.js/lib/languages/nginx'
 import plaintext from 'highlight.js/lib/languages/plaintext'
 
-hljs.registerLanguage('javascript', javascript)
-hljs.registerLanguage('js', javascript)
-hljs.registerLanguage('typescript', typescript)
-hljs.registerLanguage('ts', typescript)
-hljs.registerLanguage('python', python)
-hljs.registerLanguage('py', python)
-hljs.registerLanguage('bash', bash)
-hljs.registerLanguage('shell', shell)
-hljs.registerLanguage('sh', bash)
-hljs.registerLanguage('json', json)
-hljs.registerLanguage('xml', xml)
-hljs.registerLanguage('html', xml)
-hljs.registerLanguage('vue', xml)
-hljs.registerLanguage('css', css)
-hljs.registerLanguage('scss', scss)
-hljs.registerLanguage('sql', sql)
-hljs.registerLanguage('yaml', yaml)
-hljs.registerLanguage('yml', yaml)
-hljs.registerLanguage('markdown', markdown)
-hljs.registerLanguage('md', markdown)
-hljs.registerLanguage('dockerfile', dockerfile)
-hljs.registerLanguage('nginx', nginx)
-hljs.registerLanguage('plaintext', plaintext)
-hljs.registerLanguage('text', plaintext)
-
-// Vditor 会从 CDN 加载 highlight.js，强制覆盖为我们本地的
+const LANGS: [string, any][] = [
+  ['javascript', javascript], ['js', javascript],
+  ['typescript', typescript], ['ts', typescript],
+  ['python', python], ['py', python],
+  ['java', java],
+  ['cpp', cpp], ['c++', cpp], ['cxx', cpp],
+  ['c', c],
+  ['go', go_], ['golang', go_],
+  ['rust', rust], ['rs', rust],
+  ['php', php],
+  ['ruby', ruby], ['rb', ruby],
+  ['swift', swift],
+  ['kotlin', kotlin], ['kt', kotlin],
+  ['bash', bash], ['shell', shell], ['sh', bash], ['zsh', bash],
+  ['json', json],
+  ['xml', xml], ['html', xml], ['vue', xml], ['svg', xml],
+  ['css', css], ['scss', scss], ['less', less],
+  ['sql', sql],
+  ['yaml', yaml], ['yml', yaml],
+  ['toml', toml], ['ini', toml],
+  ['makefile', makefile],
+  ['diff', diff], ['patch', diff],
+  ['graphql', graphql], ['gql', graphql],
+  ['markdown', markdown], ['md', markdown],
+  ['dockerfile', dockerfile], ['docker', dockerfile],
+  ['nginx', nginx],
+  ['plaintext', plaintext], ['text', plaintext], ['txt', plaintext],
+]
+LANGS.forEach(([name, mod]) => hljs.registerLanguage(name, mod))
 ;(window as any).hljs = hljs
 
+// ── 常量 ──
+const CHART_LANGS = new Set(['mermaid', 'graphviz', 'plantuml', 'dot', 'echarts', 'flowchart', 'mindmap'])
 const HIGHLIGHT_RE = /\/\/\s*\[!code\s+(highlight|hl)\]\s*$/
+const COPY_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+const WRAP_ICON  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><path d="m16 16 2 2-2 2"/><path d="M3 18h7"/></svg>'
+const FOLD_ICON  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
 
+// ── 工具函数 ──
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-/** 把源码 + 语言转换为带行号 + 高亮的 HTML 字符串 */
-function buildCodeBlockHTML(rawCode: string, lang: string) {
+/** 将纯源码 + 语言转换为带行号 + hljs 高亮的代码块 HTML */
+function buildCodeBlockHTML(rawCode: string, lang: string): string {
   const sourceLines = rawCode.split('\n')
   const highlightedLines = new Set<number>()
   const cleanLines: string[] = []
@@ -73,6 +96,7 @@ function buildCodeBlockHTML(rawCode: string, lang: string) {
       cleanLines.push(sourceLines[i])
     }
   }
+  while (cleanLines.length && !cleanLines[cleanLines.length - 1].trim()) cleanLines.pop()
   const cleanCode = cleanLines.join('\n')
 
   let highlightedHtml: string
@@ -102,9 +126,9 @@ function buildCodeBlockHTML(rawCode: string, lang: string) {
     `  <div class="code-block-header">`,
     `    <span class="code-block-lang">${escapeHtml(displayLang)}</span>`,
     `    <div class="code-block-actions">`,
-    `      <button class="code-block-btn" data-copy type="button" title="复制代码"><span class="label">复制</span></button>`,
-    `      <button class="code-block-btn icon-only" data-wrap type="button" title="切换换行"><span class="label">换行</span></button>`,
-    `      <button class="code-block-btn icon-only" data-fold type="button" title="折叠代码"><span class="label">折叠</span></button>`,
+    `      <button class="code-block-btn" data-copy type="button" title="复制代码">${COPY_ICON}<span class="label">复制</span></button>`,
+    `      <button class="code-block-btn" data-wrap type="button" title="切换换行">${WRAP_ICON}<span class="label">换行</span></button>`,
+    `      <button class="code-block-btn" data-fold type="button" title="折叠代码">${FOLD_ICON}<span class="label">折叠</span></button>`,
     `    </div>`,
     `  </div>`,
     `  <div class="code-block-body"><pre class="hljs code-with-line-number"><code class="language-${escapeHtml(displayLang)} hljs">${linesHtml}</code></pre></div>`,
@@ -112,51 +136,39 @@ function buildCodeBlockHTML(rawCode: string, lang: string) {
   ].join('\n')
 }
 
-/** 后处理 Vditor 输出 HTML
- *  - 处理 <pre><code>：添加行号/高亮 + 自定义按钮 wrapper
- *  - 处理 <div class="language-xxx"> 图表块：保留，让 renderCharts 调用 Vditor 原生渲染
- */
+/** 后处理 Vditor 输出 HTML */
 function postProcess(html: string): string {
   const tmp = document.createElement('div')
   tmp.innerHTML = html
 
-  // 处理所有 pre>code 代码块
-  const pres = Array.from(tmp.querySelectorAll('pre'))
-  for (const pre of pres) {
+  // 处理 pre>code 代码块
+  tmp.querySelectorAll('pre').forEach((pre) => {
     const code = pre.querySelector('code')
-    if (!code) continue
-    const classMatch = code.className.match(/language-(\w+)/)
-    const lang = (classMatch?.[1] || '').toLowerCase()
+    if (!code) return
+    const lang = (code.className.match(/language-(\w+)/)?.[1] || '').toLowerCase()
     const rawCode = code.textContent || ''
 
-    // graphviz/dot：当作图表处理，转为 div.language-graphviz 让 Vditor 渲染
-    if (lang === 'dot' || lang === 'graphviz') {
+    // 图表/脑图语言 → 保留 language-* div 结构让 Vditor 渲染
+    if (CHART_LANGS.has(lang)) {
       const div = document.createElement('div')
-      div.className = 'language-graphviz'
+      const normLang = lang === 'dot' ? 'graphviz' : lang
+      div.className = `language-${normLang}`
       div.textContent = rawCode
       pre.replaceWith(div)
-      continue
+      return
     }
 
-    // mermaid/plantuml（如果 Vditor 输出为 <pre> 形式）：同上
-    if (lang === 'mermaid' || lang === 'plantuml') {
-      const div = document.createElement('div')
-      div.className = `language-${lang}`
-      div.textContent = rawCode
-      pre.replaceWith(div)
-      continue
-    }
-
-    // 普通代码块：包装为我们的按钮结构 + 本地 hljs 高亮
+    // 普通代码块 → wrapper
     const html2 = buildCodeBlockHTML(rawCode, lang)
     const wrapper = document.createElement('div')
     wrapper.innerHTML = html2
-    pre.replaceWith(wrapper.firstElementChild || pre)
-  }
+    pre.replaceWith(wrapper.firstElementChild!)
+  })
 
   return tmp.innerHTML
 }
 
+// ── 导出 composable ──
 export function useMarkdown() {
   /** Markdown → HTML */
   async function render(content: string): Promise<string> {
@@ -165,11 +177,16 @@ export function useMarkdown() {
       const html = await Vditor.md2html(content, {
         mode: 'light',
         anchor: 2,
-        hljs: { enable: false }, // 关闭 Vditor CDN 高亮，自己处理
+        hljs: { enable: false },
         markdown: {
           toc: false,
           footnotes: true,
           autoSpace: true,
+          fixTermTypo: true,
+          mark: true,
+          sup: true,
+          sub: true,
+          paragraphBeginningSpace: false,
         },
       })
       return postProcess(html)
@@ -179,12 +196,14 @@ export function useMarkdown() {
     }
   }
 
-  /** 渲染图表（容器是文章正文 DOM） */
+  /** 渲染图表/脑图 */
   async function renderCharts(container: HTMLElement) {
-    // Vditor 原生图表渲染器查找 .language-* div
     Vditor.mermaidRender(container)
     Vditor.graphvizRender(container)
     Vditor.plantumlRender(container)
+    Vditor.mindmapRender(container)
+    Vditor.flowchartRender(container)
+    Vditor.chartRender(container)
   }
 
   return { render, renderCharts }
