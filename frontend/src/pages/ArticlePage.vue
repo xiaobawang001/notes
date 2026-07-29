@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, provide } from 'vue'
+import { ref, computed, watch, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage, NTag, NSpin } from 'naive-ui'
+import { NTag, NSpin } from 'naive-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import { useMarkdown } from '~/composables/useMarkdown'
 import { useArticles } from '~/composables/useArticles'
 import { useCategories } from '~/composables/useCategories'
 import { useArticleNav } from '~/composables/useArticleNav'
 import { useUiStore } from '~/stores/ui'
 import type { Note, TreeNode } from '~/types/note'
-import ImageZoom from '~/components/ImageZoom.vue'
 import NavBreadcrumb from '~/components/NavBreadcrumb.vue'
-import InPageSearch from '~/components/InPageSearch.vue'
-import DocOutline from '~/components/DocOutline.vue'
 import BackToTop from '~/components/BackToTop.vue'
 import SiteFooter from '~/components/SiteFooter.vue'
 import TreeNodeComp from '~/components/TreeNode.vue'
@@ -20,10 +16,8 @@ import TreeNodeComp from '~/components/TreeNode.vue'
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
-const { render, renderCharts } = useMarkdown()
 const { getArticle } = useArticles()
 const { listCategories } = useCategories()
-const message = useMessage()
 
 const article = ref<Note | null>(null)
 const articleId = ref<number | null>(null)
@@ -31,8 +25,6 @@ const loading = ref(true)
 const error = ref(false)
 const tree = ref<TreeNode[]>([])
 const activeAncestors = ref(new Set<number>())
-const imageVisible = ref(false)
-const imageSrc = ref('')
 
 // 展开/折叠/定位控制
 const expandAll = ref(false)
@@ -66,7 +58,6 @@ function doLocate() {
 const { prevArticle, nextArticle, relatedArticles } = useArticleNav(tree, articleId)
 
 const idOrSlug = computed(() => route.params.idOrSlug as string)
-const renderedContent = ref('') // Vditor 异步渲染
 
 // Breadcrumb
 const breadcrumbItems = ref<{ label: string; to?: string }[]>([])
@@ -117,65 +108,13 @@ async function load() {
     tree.value = t
     activeAncestors.value = findAncestors(t, article.value.id)
     buildBreadcrumb()
-    // Vditor 异步渲染 Markdown（带代码块后处理）
-    renderedContent.value = await render(article.value.content || '')
   } catch { error.value = true } finally { loading.value = false }
 }
 
 watch(idOrSlug, load, { immediate: true })
-
-watch(renderedContent, () => {
-  nextTick(() => {
-    const el = document.querySelector('.vp-doc') as HTMLElement
-    if (!el) return
-    renderCharts(el).catch(() => {})
-    const hash = window.location.hash
-    if (hash) {
-      const target = document.getElementById(hash.slice(1))
-      if (target) target.scrollIntoView({ block: 'start' })
-    }
-  })
-})
-
-function onContentClick(e: MouseEvent) {
-  const target = e.target as HTMLElement
-  // Vditor 锚点点击：复制链接
-  if (target.classList.contains('vditor-anchor') || target.classList.contains('heading-anchor')) {
-    e.preventDefault()
-    const url = `${window.location.origin}${window.location.pathname}${target.getAttribute('href')}`
-    navigator.clipboard.writeText(url).then(() => message.success('链接已复制'))
-    return
-  }
-  if (target.tagName === 'IMG' && target.closest('.vp-doc')) {
-    imageSrc.value = (target as HTMLImageElement).src
-    imageVisible.value = true
-    return
-  }
-  // 复制按钮
-  const copyBtn = target.closest('[data-copy]') as HTMLElement | null
-  if (copyBtn) {
-    const wrapper = copyBtn.closest('.code-block-wrapper') as HTMLElement
-    const text = (wrapper?.querySelector('.code-block-body')?.textContent || '').replace(/\n /g, '\n').replace(/^\n|\n$/g, '')
-    navigator.clipboard.writeText(text).then(() => {
-      copyBtn.classList.add('copied')
-      const label = copyBtn.querySelector('.label') as HTMLElement
-      const original = label?.textContent
-      if (label) label.textContent = '已复制'
-      setTimeout(() => { copyBtn.classList.remove('copied'); if (label) label.textContent = original || '复制' }, 2000)
-    })
-    return
-  }
-  // 换行按钮
-  const wrapBtn = target.closest('[data-wrap]') as HTMLElement | null
-  if (wrapBtn) { wrapBtn.closest('.code-block-wrapper')?.classList.toggle('wrapped'); return }
-  // 折叠按钮
-  const foldBtn = target.closest('[data-fold]') as HTMLElement | null
-  if (foldBtn) { foldBtn.closest('.code-block-wrapper')?.classList.toggle('folded'); return }
-}
 </script>
 
 <template>
-  <!-- App.vue 已提供 pt-14，用 calc 精确匹配视口 -->
   <div class="h-[calc(100vh-56px)] bg-[var(--yuque-page-bg)] flex">
     <!-- ===== 左侧目录 ===== -->
     <aside
@@ -224,14 +163,8 @@ function onContentClick(e: MouseEvent) {
               <span>更新于 {{ new Date(article.updated_at).toLocaleDateString() }}</span>
             </div>
 
-            <div class="paper! px-8 py-7 pb-10 border border-[var(--yuque-border-light)]">
-              <article
-                class="vp-doc"
-                :style="{ fontSize: 'var(--blog-doc-font-size)' }"
-                v-html="renderedContent"
-                @click="onContentClick"
-              />
-            </div>
+            <!-- 原文纯文本展示 -->
+            <pre class="paper! p-6 border border-[var(--yuque-border-light)] text-14px leading-relaxed whitespace-pre-wrap font-mono text-[var(--yuque-text)]">{{ article.content }}</pre>
 
             <!-- 上一篇/下一篇 -->
             <div class="mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
@@ -274,23 +207,6 @@ function onContentClick(e: MouseEvent) {
       </div>
       <SiteFooter />
     </main>
-
-    <!-- ===== 右侧目录 ===== -->
-    <aside
-      v-if="!ui.focusMode && article"
-      class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] overflow-y-auto sb-hidden"
-    >
-      <div class="pl-5 pr-3 pt-5">
-        <DocOutline content-selector=".vp-doc" />
-      </div>
-    </aside>
   </div>
-
-  <InPageSearch />
   <BackToTop />
-  <ImageZoom :visible="imageVisible" :src="imageSrc" alt="" @update:visible="imageVisible = $event" />
 </template>
-
-<style scoped>
-@import '~/styles/vp-doc.css';
-</style>
