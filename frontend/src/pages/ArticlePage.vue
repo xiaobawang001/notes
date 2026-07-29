@@ -117,7 +117,7 @@ async function load() {
     tree.value = t
     activeAncestors.value = findAncestors(t, article.value.id)
     buildBreadcrumb()
-    // Vditor 异步渲染 Markdown
+    // Vditor 异步渲染 Markdown（带代码块后处理）
     renderedContent.value = await render(article.value.content || '')
   } catch { error.value = true } finally { loading.value = false }
 }
@@ -151,18 +151,26 @@ function onContentClick(e: MouseEvent) {
     imageVisible.value = true
     return
   }
-  // Vditor 代码块按钮：换行
-  const wrapBtn = target.closest('[data-wrap-btn]') as HTMLElement | null
-  if (wrapBtn) {
-    wrapBtn.closest('pre')?.classList.toggle('vditor-code--wrap')
+  // 复制按钮
+  const copyBtn = target.closest('[data-copy]') as HTMLElement | null
+  if (copyBtn) {
+    const wrapper = copyBtn.closest('.code-block-wrapper') as HTMLElement
+    const text = (wrapper?.querySelector('.code-block-body')?.textContent || '').replace(/\n /g, '\n').replace(/^\n|\n$/g, '')
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('copied')
+      const label = copyBtn.querySelector('.label') as HTMLElement
+      const original = label?.textContent
+      if (label) label.textContent = '已复制'
+      setTimeout(() => { copyBtn.classList.remove('copied'); if (label) label.textContent = original || '复制' }, 2000)
+    })
     return
   }
-  // 折叠
-  const foldBtn = target.closest('[data-fold-btn]') as HTMLElement | null
-  if (foldBtn) {
-    foldBtn.closest('pre')?.classList.toggle('vditor-code--fold')
-    return
-  }
+  // 换行按钮
+  const wrapBtn = target.closest('[data-wrap]') as HTMLElement | null
+  if (wrapBtn) { wrapBtn.closest('.code-block-wrapper')?.classList.toggle('wrapped'); return }
+  // 折叠按钮
+  const foldBtn = target.closest('[data-fold]') as HTMLElement | null
+  if (foldBtn) { foldBtn.closest('.code-block-wrapper')?.classList.toggle('folded'); return }
 }
 </script>
 
