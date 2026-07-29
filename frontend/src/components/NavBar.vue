@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui'
 import { useAuthStore } from '~/stores/auth'
 import { useUiStore } from '~/stores/ui'
 import {
-  Search, Type, StretchHorizontal, ScanEye, Sun, Moon,
+  Type, StretchHorizontal, ScanEye, Sun, Moon,
   Settings, LogOut, LogIn,
 } from 'lucide-vue-next'
 
@@ -48,15 +48,6 @@ function toggleDark() {
   >
     <!-- 站点标题 -->
     <RouterLink to="/notes" class="text-lg font-semibold text-main no-underline! mr-3">我的笔记</RouterLink>
-
-    <!-- 搜索 -->
-    <RouterLink
-      to="/search"
-      class="flex items-center justify-center w-8 h-8 rounded-md text-secondary no-underline! hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
-      title="搜索文章"
-    >
-      <Search :size="16" />
-    </RouterLink>
 
     <div class="flex-1" />
 

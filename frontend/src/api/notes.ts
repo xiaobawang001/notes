@@ -30,6 +30,3 @@ export function getCategories(): Promise<{ data: any[] }> {
   return api.get('/notes/categories')
 }
 
-export function searchNotes(q: string): Promise<{ data: { items: any[]; total: number } }> {
-  return api.get('/notes/search', { params: { q } })
-}
