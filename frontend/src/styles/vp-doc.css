@@ -192,6 +192,9 @@ html.dark .hljs { background: transparent !important; }
 .chart-wrapper { display: none; }
 .kroki-chart { max-width: 100%; margin: 20px 0; border-radius: 6px; }
 .mermaid { margin: 20px 0; text-align: center; }
+.plantuml-diagram { max-width: 100%; margin: 20px 0; border-radius: 6px; }
+.graphviz-diagram { max-width: 100%; margin: 20px 0; display: flex; justify-content: center; }
+.graphviz-diagram svg { max-width: 100%; height: auto; }
 
 /* 阅读进度条 */
 .reading-progress { position:fixed; top:var(--vp-nav-height); left:0; z-index:30; width:100%; height:3px; background:transparent; pointer-events:none; }

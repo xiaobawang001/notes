@@ -94,28 +94,41 @@ export function useMarkdown() {
     if (mermaidBlocks.length) {
       import('mermaid').then((m) => { m.default.run({ nodes: document.querySelectorAll('.mermaid') }) })
     }
-    const krokiBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="graphviz"], .chart-wrapper[data-lang="plantuml"]')
-    for (const block of krokiBlocks) {
-      const lang = block.getAttribute('data-lang') || 'graphviz'
-      const source = block.textContent || ''
-      if (lang === 'plantuml') {
-        // PlantUML 使用自定义 base64 编码（deflate + encode6bit），不是标准 base64
-        const { encode } = await import('plantuml-encoder')
+    // ── Graphviz：本地 WASM 渲染 ──
+    const graphvizBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="graphviz"]')
+    if (graphvizBlocks.length) {
+      try {
+        const viz = await import('@viz-js/viz')
+        const instance = await viz.instance()
+        for (const block of graphvizBlocks) {
+          const source = block.textContent || ''
+          if (!source.trim()) continue
+          try {
+            const svg = instance.renderSVGElement(source)
+            const wrapper = document.createElement('div')
+            wrapper.className = 'graphviz-diagram'
+            wrapper.appendChild(svg)
+            block.replaceWith(wrapper)
+          } catch (e) {
+            block.replaceWith(document.createTextNode(`[Graphviz 渲染失败]`))
+          }
+        }
+      } catch (e) {
+        console.warn('[graphviz] WASM 加载失败:', e)
+      }
+    }
+
+    // ── PlantUML：Kroki API ──
+    const plantumlBlocks = container.querySelectorAll<HTMLElement>('.chart-wrapper[data-lang="plantuml"]')
+    if (plantumlBlocks.length) {
+      const { encode } = await import('plantuml-encoder')
+      for (const block of plantumlBlocks) {
+        const source = block.textContent || ''
         const img = document.createElement('img')
-        img.className = 'kroki-chart'
+        img.className = 'plantuml-diagram'
         img.alt = 'PlantUML 图表'
         img.loading = 'lazy'
         img.src = `https://kroki.io/plantuml/svg/${encode(source)}`
-        img.onerror = () => { img.style.display = 'none' }
-        block.replaceWith(img)
-      } else {
-        // graphviz: 纯 base64
-        const img = document.createElement('img')
-        img.className = 'kroki-chart'
-        img.alt = `${lang} diagram`
-        img.loading = 'lazy'
-        const bytes = new TextEncoder().encode(source)
-        img.src = `https://kroki.io/${lang}/svg/${btoa(String.fromCharCode(...bytes))}`
         img.onerror = () => { img.style.display = 'none' }
         block.replaceWith(img)
       }
