@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '~/stores/auth'
 import { useUiStore } from '~/stores/ui'
@@ -7,12 +7,10 @@ import {
   Search, Type, StretchHorizontal, ScanEye, Sun, Moon,
   Settings, LogOut, LogIn,
 } from 'lucide-vue-next'
-import SearchModal from '~/components/SearchModal.vue'
 
 const auth = useAuthStore()
 const ui = useUiStore()
 const message = useMessage()
-const searchModal = ref<InstanceType<typeof SearchModal> | null>(null)
 
 const fontSizeOrder = ['small', 'medium', 'large']
 const fontSizeLabel: Record<string, string> = { small: '小', medium: '中', large: '大' }
@@ -52,14 +50,13 @@ function toggleDark() {
     <RouterLink to="/notes" class="text-lg font-semibold text-main no-underline! mr-3">我的笔记</RouterLink>
 
     <!-- 搜索 -->
-    <button
-      class="flex items-center justify-center w-8 h-8 rounded-md text-secondary hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors border-none cursor-pointer"
-      title="搜索文章 (Ctrl+K)"
-      @click="searchModal?.openModal()"
+    <RouterLink
+      to="/search"
+      class="flex items-center justify-center w-8 h-8 rounded-md text-secondary no-underline! hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
+      title="搜索文章"
     >
       <Search :size="16" />
-    </button>
-    <SearchModal ref="searchModal" />
+    </RouterLink>
 
     <div class="flex-1" />
 
