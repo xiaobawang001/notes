@@ -170,14 +170,14 @@ function onContentClick(e: MouseEvent) {
 
 <template>
   <div class="min-h-screen bg-[var(--yuque-page-bg)]">
-    <div class="flex">
-      <!-- Sidebar -->
+    <!-- 左中右三栏独立布局 -->
+    <div class="flex min-h-[calc(100vh-56px)]">
+      <!-- ===== 左侧目录 ===== -->
       <aside
-        class="sidebar-panel"
+        class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-r border-[var(--yuque-border)] overflow-y-auto"
         :style="{ visibility: ui.focusMode ? 'hidden' : 'visible' }"
       >
         <div class="p-4 pt-3">
-          <!-- 工具栏 -->
           <div class="flex items-center gap-1 mb-3 pb-2 border-b border-[var(--yuque-border-light)]">
             <h2 class="text-15px font-semibold text-[var(--yuque-text)] flex-1">文章目录</h2>
             <button
@@ -200,18 +200,10 @@ function onContentClick(e: MouseEvent) {
         </div>
       </aside>
 
-      <!-- Main area -->
-      <main
-        class="flex-1 min-h-[calc(100vh-56px)]"
-        :style="{ marginLeft: ui.focusMode ? '0' : 'calc(var(--vp-sidebar-width) + 12px)' }"
-      >
-        <div class="flex gap-4 justify-center min-h-full px-4">
-          <!-- 正文区 -->
-          <div
-            class="w-full min-w-0 py-6"
-            :style="{ maxWidth: 'var(--blog-content-max-width)' }"
-          >
-            <NSpin :show="loading" size="large">
+      <!-- ===== 正文区 ===== -->
+      <main class="flex-1 min-w-0 flex justify-center">
+        <div class="w-full min-w-0 py-6 px-4" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
+          <NSpin :show="loading" size="large">
               <div v-if="error" class="text-center py-16">
                 <p class="text-secondary mb-4">文章未找到</p>
                 <RouterLink to="/notes" class="link-brand">← 返回首页</RouterLink>
@@ -275,13 +267,17 @@ function onContentClick(e: MouseEvent) {
               </template>
             </NSpin>
           </div>
+        </main>
 
-          <!-- 右侧目录 -->
-          <div v-if="!ui.focusMode && article" class="shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] pl-5 pr-3 pt-6 min-h-[calc(100vh-56px)]">
-            <DocOutline content-selector=".vp-doc" />
-          </div>
+      <!-- ===== 右侧目录 ===== -->
+      <aside
+        v-if="!ui.focusMode && article"
+        class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] overflow-y-auto"
+      >
+        <div class="pl-5 pr-3 pt-5">
+          <DocOutline content-selector=".vp-doc" />
         </div>
-      </main>
+      </aside>
     </div>
 
     <SiteFooter />
@@ -293,17 +289,4 @@ function onContentClick(e: MouseEvent) {
 
 <style scoped>
 @import '~/styles/vp-doc.css';
-
-.sidebar-panel {
-  position: fixed;
-  left: 0;
-  top: var(--vp-nav-height, 56px);
-  bottom: 0;
-  width: var(--vp-sidebar-width, 280px);
-  border-right: 1px solid var(--yuque-border);
-  background: var(--yuque-sidebar-bg);
-  overflow-y: auto;
-  z-index: 10;
-  transition: visibility 0.2s;
-}
 </style>

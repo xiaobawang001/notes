@@ -97,14 +97,13 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-[var(--yuque-page-bg)]">
-    <div class="flex">
-      <!-- Sidebar -->
+    <div class="flex min-h-[calc(100vh-56px)]">
+      <!-- 左侧目录 -->
       <aside
-        class="sidebar-panel"
+        class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-r border-[var(--yuque-border)] overflow-y-auto"
         :style="{ visibility: ui.focusMode ? 'hidden' : 'visible' }"
       >
         <div class="p-4 pt-3">
-          <!-- 工具栏 -->
           <div class="flex items-center gap-1 mb-3 pb-2 border-b border-[var(--yuque-border-light)]">
             <h2 class="text-15px font-semibold text-[var(--yuque-text)] flex-1">目录</h2>
             <button
@@ -129,51 +128,34 @@ onMounted(async () => {
         </div>
       </aside>
 
-      <!-- Main -->
-      <main class="flex-1 min-h-[calc(100vh-56px)]" :style="{ marginLeft: 'calc(var(--vp-sidebar-width) + 12px)' }">
-        <div class="py-6 flex justify-center">
-          <div :style="{ maxWidth: 'var(--blog-content-max-width)', width: '100%' }" class="px-4">
-            <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
-            <NSpin :show="loading">
-              <div class="grid gap-3">
-                <article
-                  v-for="a in articles"
-                  :key="a.id"
-                  class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow border border-[var(--yuque-border-light)]"
-              @click="router.push(`/article/${a.id}`)"
-            >
-              <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
-              <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
-              <div class="flex items-center gap-3 mt-3 text-12px text-secondary">
-                <span v-if="getCategoryName(a.parent_id)" class="flex items-center gap-1">
-                  <FolderOpen :size="12" /> {{ getCategoryName(a.parent_id) }}
-                </span>
-                <span>{{ a.word_count }} 字</span>
-                <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
-              </div>
-            </article>
+      <!-- 正文区 -->
+      <main class="flex-1 min-w-0 flex justify-center">
+        <div class="w-full py-6 px-4" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
+          <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
+          <NSpin :show="loading">
+            <div class="grid gap-3">
+              <article
+                v-for="a in articles"
+                :key="a.id"
+                class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow border border-[var(--yuque-border-light)]"
+                @click="router.push(`/article/${a.id}`)"
+              >
+                <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
+                <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
+                <div class="flex items-center gap-3 mt-3 text-12px text-secondary">
+                  <span v-if="getCategoryName(a.parent_id)" class="flex items-center gap-1">
+                    <FolderOpen :size="12" /> {{ getCategoryName(a.parent_id) }}
+                  </span>
+                  <span>{{ a.word_count }} 字</span>
+                  <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
+                </div>
+              </article>
             </div>
           </NSpin>
         </div>
-      </div>
-    </main>
+      </main>
     </div>
     <BackToTop />
     <SiteFooter />
   </div>
 </template>
-
-<style scoped>
-.sidebar-panel {
-  position: fixed;
-  left: 0;
-  top: var(--vp-nav-height, 56px);
-  bottom: 0;
-  width: var(--vp-sidebar-width, 280px);
-  border-right: 1px solid var(--yuque-border);
-  background: var(--yuque-sidebar-bg);
-  overflow-y: auto;
-  z-index: 10;
-  transition: visibility 0.2s;
-}
-</style>
