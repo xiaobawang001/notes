@@ -57,15 +57,15 @@ renderer.code = function ({ text, lang }: any) {
     `  <div class="code-header">`,
     `    <span class="code-lang-label">${escapeHtml(displayLang)}</span>`,
     `    <div class="code-actions">`,
-    `      <button class="code-btn" data-copy type="button" title="复制代码">`,
-    `        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+    `      <button class="code-btn" data-copy type="button" title="复制代码" aria-label="复制代码">`,
+    `        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
     `        <span>复制</span>`,
     `      </button>`,
-    `      <button class="code-btn" data-wrap type="button" title="换行切换">`,
-    `        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 12H3"/><path d="m15 8 4 4-4 4"/><path d="M8 4v16"/></svg>`,
+    `      <button class="code-btn code-btn-icon" data-wrap type="button" title="换行切换" aria-label="换行">`,
+    `        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h15a3 3 0 1 1 0 6h-4M16 16l-2 2 2 2M3 18h7"/></svg>`,
     `      </button>`,
-    `      <button class="code-btn" data-fold type="button" title="折叠代码">`,
-    `        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`,
+    `      <button class="code-btn code-btn-icon" data-fold type="button" title="折叠代码" aria-label="折叠">`,
+    `        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
     `      </button>`,
     `    </div>`,
     `  </div>`,
@@ -101,7 +101,10 @@ export function useMarkdown() {
       img.className = 'kroki-chart'
       img.alt = `${lang} diagram`
       img.loading = 'lazy'
-      img.src = `https://kroki.io/${lang}/svg/${btoa(unescape(encodeURIComponent(block.textContent || '')))}`
+      // UTF-8 安全编码（兼容中文）
+      const utf8Bytes = new TextEncoder().encode(block.textContent || '')
+      const base64 = btoa(String.fromCharCode(...utf8Bytes))
+      img.src = `https://kroki.io/${lang}/svg/${base64}`
       img.onerror = () => { img.style.display = 'none' }
       block.replaceWith(img)
     }
