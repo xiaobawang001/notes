@@ -39,9 +39,7 @@ watch(locateTarget, (id) => {
         class="flex items-center gap-1 py-1 px-2 rounded-md text-14px cursor-pointer select-none transition-colors hover:bg-[rgba(0,185,107,0.1)]"
         :class="[
           level === 0 ? 'font-medium' : '',
-          ancestorIds?.has(node.id)
-            ? 'bg-[rgba(0,185,107,0.2)] text-[var(--yuque-brand)]'
-            : 'text-[var(--yuque-text-secondary)]',
+          'text-[var(--yuque-text-secondary)]',
         ]"
         :style="{ paddingLeft: level > 0 ? `${level * 12}px` : '0' }"
         @click="toggle"
