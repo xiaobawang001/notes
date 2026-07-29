@@ -28,25 +28,36 @@ html.dark .vp-doc :not(pre) > code { color:#c98a9a; }
 .vp-doc :is(h1,h2,h3,h4,h5,h6):hover .vditor-anchor { opacity:1; }
 .vp-doc .vditor-anchor:hover { color:var(--yuque-brand); }
 
-/* ========== 代码块增强 ========== */
+/* ========== 代码块 & 图表统一卡片 ========== */
+:root {
+  --code-card-bg: #f6f8fa;
+  --code-card-header-bg: #eef0ef;
+  --code-card-border: #e7e9e8;
+}
+html.dark {
+  --code-card-bg: #1e1e2e;
+  --code-card-header-bg: #2a2a3a;
+  --code-card-border: #383940;
+}
+
+/* 代码块卡片：居中 + 明暗主题背景 */
 .code-block-wrapper {
-  margin: 16px 0;
+  margin: 24px auto;
+  max-width: 100%;
+  width: 100%;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid var(--yuque-border);
-  background: var(--vp-code-bg, #f6f8fa);
+  border: 1px solid var(--code-card-border);
+  background: var(--code-card-bg);
 }
-html.dark .code-block-wrapper { background: var(--vp-code-bg, #282c34); }
-
 .code-block-header {
   display: flex;
   align-items: center;
-  padding: 6px 12px;
-  background: var(--vp-code-header-bg, #eef0ef);
-  color: var(--vp-code-header-text, #646a73);
-  border-bottom: 1px solid var(--yuque-border);
+  padding: 7px 14px;
+  background: var(--code-card-header-bg);
+  color: var(--yuque-text-secondary);
+  border-bottom: 1px solid var(--code-card-border);
 }
-html.dark .code-block-header { background: var(--vp-code-header-bg, #232429); color: var(--vp-code-header-text, #90939c); }
 
 .code-block-lang {
   font-size: 12px;
@@ -69,7 +80,7 @@ html.dark .code-block-lang { background: rgba(255,255,255,0.08); }
   padding: 4px 8px;
   border: none;
   background: transparent;
-  color: var(--vp-code-header-text, #646a73);
+  color: var(--yuque-text-secondary);
   cursor: pointer;
   border-radius: 4px;
   font-size: 12px;
@@ -89,12 +100,12 @@ html.dark .code-block-btn:hover { background: rgba(255,255,255,0.1); }
   margin: 0;
   overflow-x: auto;
   background: transparent;
-  color: var(--vp-code-text, #383a42);
+  color: #383a42;
   font-size: 0.85rem;
   line-height: 1.6;
   font-family: Consolas, Monaco, 'Courier New', monospace;
 }
-html.dark .code-block-body pre { color: var(--vp-code-text, #abb2bf); }
+html.dark .code-block-body pre { color: #abb2bf; }
 
 /* 行号 + 内容两栏布局 */
 .code-block-body .code-with-line-number { counter-reset: line-counter; padding: 0; }
@@ -106,12 +117,12 @@ html.dark .code-block-body pre { color: var(--vp-code-text, #abb2bf); }
   flex: 0 0 40px;
   text-align: right;
   padding: 0 12px;
-  color: var(--vp-code-line-number, #9ca3af);
+  color: #9ca3af;
   user-select: none;
   font-size: 0.85em;
   border-right: 1px solid var(--yuque-border-light);
 }
-html.dark .code-block-body .line-num { color: #636d83; }
+html.dark .code-block-body .line-num { color: #636d83; border-right-color: #3a3a4a; }
 .code-block-body .line-content {
   flex: 1;
   min-width: 0;
@@ -159,27 +170,52 @@ html.dark .vp-doc .hljs-attr { color: #d19a66; }
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 60px;
-  background: linear-gradient(transparent, var(--vp-code-bg, #f6f8fa));
+  background: linear-gradient(transparent, var(--code-card-bg));
   pointer-events: none;
 }
 html.dark .code-block-wrapper.folded .code-block-body::after {
-  background: linear-gradient(transparent, var(--vp-code-bg, #282c34));
+  background: linear-gradient(transparent, var(--code-card-bg));
 }
 .code-block-wrapper.folded [data-fold] .label::before { content: '展开'; }
 .code-block-wrapper:not(.folded) [data-fold] .label::before { content: '折叠'; }
 
-/* ========== 图表 ========== */
-.vp-doc .mermaid { margin: 20px 0; text-align: center; }
-.vp-doc .mermaid svg { max-width: 100%; height: auto; }
-.vp-doc .graphviz > svg, .vp-doc .vditor-graphviz svg,
-.vp-doc .language-graphviz svg { max-width: 100%; height: auto; display:block; margin:20px auto; }
-.vp-doc .plantuml > object, .vp-doc .language-plantuml object,
-.vp-doc .language-plantuml img { max-width: 100%; margin: 20px 0; border-radius: 6px; }
-.vp-doc .language-mindmap { margin: 20px 0; }
-.vp-doc .language-mindmap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-.vp-doc .language-flowchart { margin: 20px 0; }
-.vp-doc .language-echarts { margin: 20px 0; }
-.vp-doc .language-echarts > div { max-width: 100% !important; }
+/* ========== 图表卡片 ========== */
+/* 统一图表容器样式：居中 + 圆角 + 明暗背景 */
+.vp-doc .language-mermaid,
+.vp-doc .language-graphviz,
+.vp-doc .language-plantuml,
+.vp-doc .language-mindmap,
+.vp-doc .language-flowchart,
+.vp-doc .language-echarts,
+.vp-doc .graphviz-diagram,
+.vp-doc .mermaid {
+  margin: 24px 0;
+  border-radius: 8px;
+  border: 1px solid var(--code-card-border);
+  background: var(--code-card-bg);
+  padding: 16px 16px 12px;
+  overflow-x: auto;
+  text-align: center;
+}
+.vp-doc .language-mermaid svg,
+.vp-doc .language-graphviz svg,
+.vp-doc .language-mindmap svg,
+.vp-doc .language-flowchart svg,
+.vp-doc .mermaid svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.vp-doc .language-plantuml object,
+.vp-doc .language-plantuml img {
+  max-width: 100%;
+  margin: 0 auto;
+  display: block;
+}
+.vp-doc .language-echarts > div {
+  max-width: 100% !important;
+}
 
 /* 深色模式 */
 html.dark .vp-doc { color: #abb2bf; }
