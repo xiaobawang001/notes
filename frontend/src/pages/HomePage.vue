@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, provide } from 'vue'
+import { ref, onMounted, provide } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUiStore } from '~/stores/ui'
 import { useCategories } from '~/composables/useCategories'
@@ -32,7 +32,7 @@ function getCategoryName(parentId: number): string {
   return ''
 }
 
-// 展开/折叠/定位控制（通过 provide/inject 传递给 TreeNode）
+// 展开/折叠/定位控制
 const expandAll = ref(false)
 const collapseAll = ref(false)
 const locateTarget = ref(0)
@@ -53,10 +53,9 @@ function toggleAll() {
   setTimeout(() => { expandAll.value = false; collapseAll.value = false }, 100)
 }
 
-/** 在树中查找目标节点的所有祖先 ID */
 function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
   const ancestors = new Set<number>()
-  function walk(list: TreeNodeType[], path: number[]): boolean {
+  function walk(list: TreeNode[], path: number[]): boolean {
     for (const n of list) {
       if (n.id === targetId) { path.forEach(id => ancestors.add(id)); return true }
       if (n.children?.length) {
@@ -72,8 +71,6 @@ function findAncestors(nodes: TreeNode[], targetId: number): Set<number> {
 }
 
 function doLocate() {
-  if (!articles.value.length && !tree.value.length) return
-  // 取第一篇文章作为定位目标（首页无当前文章概念，定位到首篇）
   const first = articles.value[0]
   if (!first) return
   locateAncestors.value = findAncestors(tree.value, first.id)
@@ -96,66 +93,65 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="h-screen bg-[var(--yuque-page-bg)]">
-    <div class="flex h-[calc(100vh-56px)] mt-14">
-      <!-- 左侧目录 -->
-      <aside
-        class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-r border-[var(--yuque-border)] overflow-y-auto sb-hidden"
-        :style="{ visibility: ui.focusMode ? 'hidden' : 'visible' }"
-      >
-        <div class="p-4 pt-3">
-          <div class="flex items-center gap-1 mb-3 pb-2 border-b border-[var(--yuque-border-light)]">
-            <h2 class="text-15px font-semibold text-[var(--yuque-text)] flex-1">目录</h2>
-            <button
-              class="w-7 h-7 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
-              title="定位到当前文档"
-              @click="doLocate"
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>
-            </button>
-            <button
-              class="w-7 h-7 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
-              :title="allExpanded ? '折叠全部分类' : '展开全部分类'"
-              @click="toggleAll"
-            >
-              <svg v-if="!allExpanded" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-              <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
-            </button>
-          </div>
-          <NSpin :show="loading" size="small">
-            <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" />
-          </NSpin>
+  <!-- App.vue 已提供 pt-14，此处用 calc 避免溢出 -->
+  <div class="h-[calc(100vh-56px)] bg-[var(--yuque-page-bg)] flex">
+    <!-- ===== 左侧目录 ===== -->
+    <aside
+      class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-r border-[var(--yuque-border)] overflow-y-auto sb-hidden"
+      :style="{ visibility: ui.focusMode ? 'hidden' : 'visible' }"
+    >
+      <div class="p-4 pt-3">
+        <div class="flex items-center gap-1 mb-3 pb-2 border-b border-[var(--yuque-border-light)]">
+          <h2 class="text-15px font-semibold text-[var(--yuque-text)] flex-1">目录</h2>
+          <button
+            class="w-7 h-7 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
+            title="定位到当前文档"
+            @click="doLocate"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>
+          </button>
+          <button
+            class="w-7 h-7 rounded flex items-center justify-center border-none cursor-pointer text-[var(--yuque-text-secondary)] hover:bg-[var(--yuque-brand-soft)] hover:text-[var(--yuque-brand)] transition-colors"
+            :title="allExpanded ? '折叠全部分类' : '展开全部分类'"
+            @click="toggleAll"
+          >
+            <svg v-if="!allExpanded" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
         </div>
-      </aside>
+        <NSpin :show="loading" size="small">
+          <TreeNodeComp v-for="node in tree" :key="node.id" :node="node" :level="0" />
+        </NSpin>
+      </div>
+    </aside>
 
-      <!-- 正文区 -->
-      <main class="flex-1 min-w-0 flex justify-center overflow-y-auto">
-        <div class="w-full py-6 px-4" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
-          <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
-          <NSpin :show="loading">
-            <div class="grid gap-3">
-              <article
-                v-for="a in articles"
-                :key="a.id"
-                class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow border border-[var(--yuque-border-light)]"
-                @click="router.push(`/article/${a.id}`)"
-              >
-                <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
-                <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
-                <div class="flex items-center gap-3 mt-3 text-12px text-secondary">
-                  <span v-if="getCategoryName(a.parent_id)" class="flex items-center gap-1">
-                    <FolderOpen :size="12" /> {{ getCategoryName(a.parent_id) }}
-                  </span>
-                  <span>{{ a.word_count }} 字</span>
-                  <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
-                </div>
-              </article>
-            </div>
-          </NSpin>
-        </div>
-        <SiteFooter />
-      </main>
-    </div>
-    <BackToTop />
+    <!-- ===== 正文区 ===== -->
+    <main class="flex-1 min-w-0 flex flex-col overflow-y-auto">
+      <div class="flex-1 w-full mx-auto py-6 px-4" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
+        <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
+        <NSpin :show="loading">
+          <div class="grid gap-3">
+            <article
+              v-for="a in articles"
+              :key="a.id"
+              class="paper! p-5 cursor-pointer hover:shadow-md transition-shadow border border-[var(--yuque-border-light)]"
+              @click="router.push(`/article/${a.id}`)"
+            >
+              <h2 class="text-lg font-semibold text-main mb-2 m-0">{{ a.title }}</h2>
+              <p class="text-14px text-secondary line-clamp-2 m-0">{{ a.content?.slice(0, 200) }}</p>
+              <div class="flex items-center gap-3 mt-3 text-12px text-secondary">
+                <span v-if="getCategoryName(a.parent_id)" class="flex items-center gap-1">
+                  <FolderOpen :size="12" /> {{ getCategoryName(a.parent_id) }}
+                </span>
+                <span>{{ a.word_count }} 字</span>
+                <span>{{ new Date(a.updated_at).toLocaleDateString() }}</span>
+              </div>
+            </article>
+          </div>
+        </NSpin>
+      </div>
+      <SiteFooter />
+    </main>
   </div>
+  <BackToTop />
 </template>
