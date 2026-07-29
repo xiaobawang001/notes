@@ -130,9 +130,9 @@ onMounted(async () => {
       </aside>
 
       <!-- Main -->
-      <main class="flex-1 ml-[var(--vp-sidebar-width)] min-h-[calc(100vh-56px)]">
+      <main class="flex-1 min-h-[calc(100vh-56px)]" :style="{ marginLeft: 'calc(var(--vp-sidebar-width) + 12px)' }">
         <div class="py-6 flex justify-center">
-          <div :style="{ maxWidth: 'var(--blog-content-max-width)', width: '100%' }" class="px-6">
+          <div :style="{ maxWidth: 'var(--blog-content-max-width)', width: '100%' }" class="px-4">
             <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
             <NSpin :show="loading">
               <div class="grid gap-3">

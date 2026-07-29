@@ -202,10 +202,10 @@ function onContentClick(e: MouseEvent) {
 
       <!-- Main area -->
       <main
-        class="flex-1 ml-[var(--vp-sidebar-width)] min-h-[calc(100vh-56px)]"
-        :style="{ marginLeft: ui.focusMode ? '0' : 'var(--vp-sidebar-width)' }"
+        class="flex-1 min-h-[calc(100vh-56px)]"
+        :style="{ marginLeft: ui.focusMode ? '0' : 'calc(var(--vp-sidebar-width) + 12px)' }"
       >
-        <div class="flex gap-0 justify-center min-h-full">
+        <div class="flex gap-4 justify-center min-h-full px-4">
           <!-- 正文区 -->
           <div
             class="w-full min-w-0 py-6"
@@ -218,9 +218,9 @@ function onContentClick(e: MouseEvent) {
               </div>
 
               <template v-else-if="article">
-                <NavBreadcrumb :items="breadcrumbItems" class="mb-6" />
+                <NavBreadcrumb :items="breadcrumbItems" class="mb-4" />
 
-                <div class="mb-6 flex items-center gap-2 text-13px text-secondary">
+                <div class="mb-4 flex items-center gap-2 text-13px text-secondary">
                   <NTag v-if="article.status === 'draft'" type="error" size="small" round>草稿</NTag>
                   <NTag v-if="article.pinned" type="success" size="small" round>置顶</NTag>
                   <span>{{ article.word_count }} 字</span>
@@ -277,7 +277,7 @@ function onContentClick(e: MouseEvent) {
           </div>
 
           <!-- 右侧目录 -->
-          <div v-if="!ui.focusMode && article" class="shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] px-4 pt-6 min-h-[calc(100vh-56px)]">
+          <div v-if="!ui.focusMode && article" class="shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] pl-5 pr-3 pt-6 min-h-[calc(100vh-56px)]">
             <DocOutline content-selector=".vp-doc" />
           </div>
         </div>
