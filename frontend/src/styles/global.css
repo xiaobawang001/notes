@@ -43,6 +43,10 @@ body { background: var(--yuque-page-bg); color: var(--yuque-text); font-size: 16
 a { color: var(--yuque-brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+/* 隐藏滚动条（侧栏使用，正文保留内置滚动条样式） */
+.sb-hidden { scrollbar-width: none; -ms-overflow-style: none; }
+.sb-hidden::-webkit-scrollbar { display: none; }
+
 /* 文内搜索高亮 */
 .in-page-search-hit {
   padding: 0 2px;

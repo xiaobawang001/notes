@@ -96,11 +96,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--yuque-page-bg)]">
-    <div class="flex min-h-[calc(100vh-56px)]">
+  <div class="h-screen bg-[var(--yuque-page-bg)]">
+    <div class="flex h-[calc(100vh-56px)] mt-14">
       <!-- 左侧目录 -->
       <aside
-        class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-r border-[var(--yuque-border)] overflow-y-auto"
+        class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-r border-[var(--yuque-border)] overflow-y-auto sb-hidden"
         :style="{ visibility: ui.focusMode ? 'hidden' : 'visible' }"
       >
         <div class="p-4 pt-3">
@@ -129,7 +129,7 @@ onMounted(async () => {
       </aside>
 
       <!-- 正文区 -->
-      <main class="flex-1 min-w-0 flex justify-center">
+      <main class="flex-1 min-w-0 flex justify-center overflow-y-auto">
         <div class="w-full py-6 px-4" :style="{ maxWidth: 'var(--blog-content-max-width)' }">
           <h1 class="text-2xl font-bold text-main mb-6">最近文章</h1>
           <NSpin :show="loading">
@@ -153,9 +153,9 @@ onMounted(async () => {
             </div>
           </NSpin>
         </div>
+        <SiteFooter />
       </main>
     </div>
     <BackToTop />
-    <SiteFooter />
   </div>
 </template>
