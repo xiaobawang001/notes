@@ -175,12 +175,9 @@ async function renderContentNow(content: string) {
   if (contentContainer.value) {
     renderCodeBlocks(contentContainer.value)
     renderCharts(contentContainer.value)
-    // Vditor outlineRender 需要遍历直接子元素（即 .vditor-reset 内的 heading）
+    // Vditor outlineRender 遍历直接子元素找 heading（.vp-doc 的内容就是正文）
     if (outlineContainer.value) {
-      const resetDiv = contentContainer.value.querySelector('.vditor-reset') as HTMLElement | null
-      if (resetDiv) {
-        Vditor.outlineRender(resetDiv, outlineContainer.value)
-      }
+      Vditor.outlineRender(contentContainer.value, outlineContainer.value)
     }
   }
 }
