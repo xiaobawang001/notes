@@ -19,7 +19,7 @@ export async function renderMarkdown(content: string): Promise<string> {
       mark: true,
       gfmAutoLink: true,
     },
-    anchor: 2,
+    anchor: 4,
   })
 }
 

@@ -13,6 +13,7 @@ import { updateNote } from '~/api/notes'
 import { renderMarkdown, renderCharts, renderCodeBlocks } from '~/composables/useMarkdown'
 import type { Note, TreeNode } from '~/types/note'
 import NavBreadcrumb from '~/components/NavBreadcrumb.vue'
+import DocOutline from '~/components/DocOutline.vue'
 import BackToTop from '~/components/BackToTop.vue'
 import SiteFooter from '~/components/SiteFooter.vue'
 import TreeNodeComp from '~/components/TreeNode.vue'
@@ -316,6 +317,14 @@ onBeforeUnmount(() => {
       </div>
       <SiteFooter />
     </main>
+
+    <!-- ===== 右侧：文章内目录 ===== -->
+    <aside
+      v-if="!ui.focusMode && article"
+      class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] overflow-y-auto sb-hidden px-4 pt-4"
+    >
+      <DocOutline content-selector=".vp-doc" />
+    </aside>
   </div>
   <BackToTop />
 </template>
