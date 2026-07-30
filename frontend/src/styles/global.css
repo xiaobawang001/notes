@@ -59,3 +59,51 @@ a:hover { text-decoration: underline; }
   color: #fff !important;
   box-shadow: 0 0 0 2px var(--yuque-brand-soft);
 }
+
+/* ========== Vditor 大纲（右侧栏） ========== */
+.vditor-outline {
+  --outline-indent: 14px;
+}
+.vditor-outline ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vditor-outline ul ul {
+  padding-left: var(--outline-indent);
+}
+.vditor-outline li {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 1px 0;
+  color: var(--yuque-text-secondary);
+}
+.vditor-outline li > span[data-target-id] {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.vditor-outline li > span[data-target-id]:hover {
+  color: var(--yuque-brand);
+  background: var(--yuque-brand-soft);
+}
+/* 收起/展开箭头 */
+.vditor-outline .vditor-outline__action {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: middle;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.vditor-outline .vditor-outline__action:hover {
+  opacity: 1;
+}

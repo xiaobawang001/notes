@@ -13,7 +13,6 @@ import { updateNote } from '~/api/notes'
 import { renderMarkdown, renderCharts, renderCodeBlocks } from '~/composables/useMarkdown'
 import type { Note, TreeNode } from '~/types/note'
 import NavBreadcrumb from '~/components/NavBreadcrumb.vue'
-import DocOutline from '~/components/DocOutline.vue'
 import BackToTop from '~/components/BackToTop.vue'
 import SiteFooter from '~/components/SiteFooter.vue'
 import TreeNodeComp from '~/components/TreeNode.vue'
@@ -37,6 +36,7 @@ const activeAncestors = ref(new Set<number>())
 const isEditing = ref(false)
 const renderedContent = ref('')
 const contentContainer = ref<HTMLElement | null>(null)
+const outlineContainer = ref<HTMLElement | null>(null)
 let vditorInstance: Vditor | null = null
 
 // 权限判断：只有文章作者本人可编辑
@@ -168,13 +168,17 @@ function cancelEdit() {
   destroyVditor()
 }
 
-// 渲染 Markdown 并刷新代码块 + 图表
+// 渲染 Markdown 并刷新代码块 + 图表 + 大纲
 async function renderContentNow(content: string) {
   renderedContent.value = await renderMarkdown(content)
   await nextTick()
   if (contentContainer.value) {
     renderCodeBlocks(contentContainer.value)
     renderCharts(contentContainer.value)
+    // Vditor 内置大纲：扫描正文标题，渲染到右侧栏
+    if (outlineContainer.value) {
+      Vditor.outlineRender(contentContainer.value, outlineContainer.value)
+    }
   }
 }
 
@@ -318,12 +322,13 @@ onBeforeUnmount(() => {
       <SiteFooter />
     </main>
 
-    <!-- ===== 右侧：文章内目录 ===== -->
+    <!-- ===== 右侧：文章内目录（Vditor outline） ===== -->
     <aside
       v-if="!ui.focusMode && article"
       class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] overflow-y-auto sb-hidden px-4 pt-4"
     >
-      <DocOutline content-selector=".vp-doc" />
+      <div class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase mb-2 tracking-wider">文章目录</div>
+      <div ref="outlineContainer" class="vditor-outline" />
     </aside>
   </div>
   <BackToTop />
