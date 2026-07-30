@@ -175,9 +175,12 @@ async function renderContentNow(content: string) {
   if (contentContainer.value) {
     renderCodeBlocks(contentContainer.value)
     renderCharts(contentContainer.value)
-    // Vditor 内置大纲：扫描正文标题，渲染到右侧栏
+    // Vditor outlineRender 需要遍历直接子元素（即 .vditor-reset 内的 heading）
     if (outlineContainer.value) {
-      Vditor.outlineRender(contentContainer.value, outlineContainer.value)
+      const resetDiv = contentContainer.value.querySelector('.vditor-reset') as HTMLElement | null
+      if (resetDiv) {
+        Vditor.outlineRender(resetDiv, outlineContainer.value)
+      }
     }
   }
 }
