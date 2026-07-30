@@ -280,6 +280,9 @@ onBeforeUnmount(() => {
             <!-- 编辑模式：Vditor 编辑器挂载点 -->
             <div v-else id="vditor-editor" class="vditor-editor-wrapper min-h-[400px]" />
 
+            <!-- 临时：正文区内显示 Vditor 原生大纲 -->
+            <div v-if="!isEditing" ref="outlineContainer" class="vditor-outline mt-4 p-4 border rounded" />
+
             <!-- 上一篇/下一篇 -->
             <div class="mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
               <div class="flex justify-between gap-4">
@@ -323,6 +326,8 @@ onBeforeUnmount(() => {
     </main>
 
     <!-- ===== 右侧：文章内目录（Vditor outline） ===== -->
+    <!-- 暂时隐藏，测试原生 outline 效果 -->
+    <!--
     <aside
       v-if="!ui.focusMode && article"
       class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] overflow-y-auto sb-hidden px-4 pt-4"
@@ -330,6 +335,7 @@ onBeforeUnmount(() => {
       <div class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase mb-2 tracking-wider">文章目录</div>
       <div ref="outlineContainer" class="vditor-outline" />
     </aside>
+    -->
   </div>
   <BackToTop />
 </template>
