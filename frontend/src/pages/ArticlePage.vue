@@ -10,7 +10,7 @@ import { useArticleNav } from '~/composables/useArticleNav'
 import { useUiStore } from '~/stores/ui'
 import { useAuthStore } from '~/stores/auth'
 import { updateNote } from '~/api/notes'
-import { renderMarkdown, renderCharts } from '~/composables/useMarkdown'
+import { renderMarkdown, renderCharts, renderCodeBlocks } from '~/composables/useMarkdown'
 import type { Note, TreeNode } from '~/types/note'
 import NavBreadcrumb from '~/components/NavBreadcrumb.vue'
 import BackToTop from '~/components/BackToTop.vue'
@@ -167,11 +167,12 @@ function cancelEdit() {
   destroyVditor()
 }
 
-// 渲染 Markdown 并刷新图表
+// 渲染 Markdown 并刷新代码块 + 图表
 async function renderContentNow(content: string) {
   renderedContent.value = await renderMarkdown(content)
   await nextTick()
   if (contentContainer.value) {
+    renderCodeBlocks(contentContainer.value)
     renderCharts(contentContainer.value)
   }
 }
