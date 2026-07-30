@@ -175,15 +175,9 @@ async function renderContentNow(content: string) {
   if (contentContainer.value) {
     renderCodeBlocks(contentContainer.value)
     renderCharts(contentContainer.value)
-    // 调试：打印正文区所有 heading
-    console.log('[outline] contentContainer:', contentContainer.value)
-    const allH = contentContainer.value.querySelectorAll('h1,h2,h3,h4,h5,h6')
-    console.log('[outline] headings found:', allH.length)
-    allH.forEach(h => console.log(`  ${h.tagName} id="${h.id}" text="${(h as HTMLElement).innerText.slice(0,30)}"`))
-    // Vditor outlineRender 遍历直接子元素找 heading
+    // Vditor 内置大纲：扫描正文标题，渲染到右侧栏
     if (outlineContainer.value) {
       Vditor.outlineRender(contentContainer.value, outlineContainer.value)
-      console.log('[outline] result HTML:', outlineContainer.value.innerHTML.substring(0, 300))
     }
   }
 }
@@ -286,9 +280,6 @@ onBeforeUnmount(() => {
             <!-- 编辑模式：Vditor 编辑器挂载点 -->
             <div v-else id="vditor-editor" class="vditor-editor-wrapper min-h-[400px]" />
 
-            <!-- 临时：正文区内显示 Vditor 原生大纲 -->
-            <div v-if="!isEditing" ref="outlineContainer" class="vditor-outline mt-4 p-4 border rounded" />
-
             <!-- 上一篇/下一篇 -->
             <div class="mt-6 pt-4 border-t border-[var(--yuque-border-light)]">
               <div class="flex justify-between gap-4">
@@ -332,8 +323,6 @@ onBeforeUnmount(() => {
     </main>
 
     <!-- ===== 右侧：文章内目录（Vditor outline） ===== -->
-    <!-- 暂时隐藏，测试原生 outline 效果 -->
-    <!--
     <aside
       v-if="!ui.focusMode && article"
       class="w-[var(--vp-sidebar-width)] shrink-0 bg-[var(--yuque-sidebar-bg)] border-l border-[var(--yuque-border)] overflow-y-auto sb-hidden px-4 pt-4"
@@ -341,7 +330,6 @@ onBeforeUnmount(() => {
       <div class="text-13px font-semibold text-[var(--yuque-text-secondary)] uppercase mb-2 tracking-wider">文章目录</div>
       <div ref="outlineContainer" class="vditor-outline" />
     </aside>
-    -->
   </div>
   <BackToTop />
 </template>
