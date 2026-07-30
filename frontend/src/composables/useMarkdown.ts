@@ -25,14 +25,14 @@ export async function renderMarkdown(content: string): Promise<string> {
 
 /** 代码块后处理：行号高亮 + 复制按钮 + 语言标签 + 外层容器 */
 export function renderCodeBlocks(container: HTMLElement): void {
-  // 1. 添加语法高亮和行号（hljs-ln 表格）
+  // 1. 添加语法高亮和行号（hljs 会异步加载）
   Vditor.highlightRender(
     { style: 'github', lineNumber: true },
     container,
     VDITOR_CDN,
   )
 
-  // 2. 添加复制按钮（.vditor-copy 元素）
+  // 2. 添加复制按钮（.vditor-copy 会被插入到 <pre> 内部，作为 <code> 的前一个兄弟）
   Vditor.codeRender(container)
 
   // 3. 为代码块添加外层容器和语言标签头部栏
@@ -44,7 +44,7 @@ export function renderCodeBlocks(container: HTMLElement): void {
     // 已包装过则跳过
     if (pre.parentElement?.classList.contains('vditor-code-wrapper')) return
 
-    // 提取语言名
+    // 提取语言名（兼容 hljs 重构后的 class）
     const langMatch = code.className.match(/language-(\w+)/)
     const lang = langMatch ? langMatch[1] : ''
 
@@ -52,18 +52,23 @@ export function renderCodeBlocks(container: HTMLElement): void {
     const wrapper = document.createElement('div')
     wrapper.className = 'vditor-code-wrapper'
 
-    // 创建头部栏
+    // 创建头部栏（含语言标签 + 复制按钮）
     const header = document.createElement('div')
     header.className = 'vditor-code-header'
-    header.innerHTML = `<span class="vditor-code-lang">${lang}</span>`
 
-    // 将 .vditor-copy 复制按钮移到头部栏右侧
-    const copyEl = pre.previousElementSibling
-    if (copyEl?.classList.contains('vditor-copy')) {
+    const langLabel = document.createElement('span')
+    langLabel.className = 'vditor-code-lang'
+    langLabel.textContent = lang
+    header.appendChild(langLabel)
+
+    // 把 .vditor-copy 复制按钮从 pre 内部挪到头部栏右侧
+    const copyEl = pre.querySelector('.vditor-copy')
+    if (copyEl) {
+      // .vditor-copy 是 <code> 的前一个兄弟，需要把它移到 pre 外面
       header.appendChild(copyEl)
     }
 
-    // 包装：父节点插入 wrapper → wrapper 放入 header + pre
+    // 包装结构：父节点 → wrapper → (header + pre)
     const parent = pre.parentElement!
     parent.insertBefore(wrapper, pre)
     wrapper.appendChild(header)

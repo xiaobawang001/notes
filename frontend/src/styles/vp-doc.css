@@ -65,62 +65,67 @@
 
 /* 代码块外层容器 */
 .vp-doc .vditor-reset .vditor-code-wrapper {
-  margin: 1em 0;
-  border: 1px solid var(--yuque-border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--yuque-code-header-bg);
+  margin: 1em 0 !important;
+  border: 1px solid var(--yuque-border) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background: var(--yuque-code-header-bg) !important;
 }
 
 /* 代码块头部栏：语言标签 + 复制按钮 */
 .vp-doc .vditor-reset .vditor-code-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 36px;
-  padding: 0 0.6em 0 1em;
-  border-bottom: 1px solid var(--yuque-border-light);
-  user-select: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 36px !important;
+  padding: 0 0.6em 0 1em !important;
+  border-bottom: 1px solid var(--yuque-border-light) !important;
+  background: var(--yuque-code-header-bg) !important;
+  user-select: none !important;
 }
 .vp-doc .vditor-reset .vditor-code-header .vditor-code-lang {
-  font-size: 0.78em;
-  color: var(--yuque-text-secondary);
-  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 0.78em !important;
+  color: var(--yuque-text-secondary) !important;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace !important;
+  font-weight: 500 !important;
 }
 
 /* 头部栏中的复制按钮区域 */
 .vp-doc .vditor-reset .vditor-code-header .vditor-copy {
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
 }
 .vp-doc .vditor-reset .vditor-code-header .vditor-copy textarea {
-  display: none;
+  display: none !important;
 }
 .vp-doc .vditor-reset .vditor-code-header .vditor-copy span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--yuque-text-secondary);
-  transition: background 0.15s, color 0.15s;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  color: var(--yuque-text-secondary) !important;
+  transition: background 0.15s, color 0.15s !important;
 }
 .vp-doc .vditor-reset .vditor-code-header .vditor-copy span:hover {
-  background: var(--yuque-brand-soft);
-  color: var(--yuque-brand);
+  background: var(--yuque-brand-soft) !important;
+  color: var(--yuque-brand) !important;
 }
 .vp-doc .vditor-reset .vditor-code-header .vditor-copy svg {
-  width: 14px;
-  height: 14px;
+  width: 14px !important;
+  height: 14px !important;
 }
 
 /* 代码块容器内的 pre（去掉外层容器已处理的 margin/border） */
 .vp-doc .vditor-reset .vditor-code-wrapper pre {
-  margin: 0;
-  border: none;
-  border-radius: 0;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.vp-doc .vditor-reset .vditor-code-wrapper pre code {
   background: transparent !important;
 }
 
