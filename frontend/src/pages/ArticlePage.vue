@@ -175,9 +175,15 @@ async function renderContentNow(content: string) {
   if (contentContainer.value) {
     renderCodeBlocks(contentContainer.value)
     renderCharts(contentContainer.value)
-    // Vditor outlineRender 遍历直接子元素找 heading（.vp-doc 的内容就是正文）
+    // 调试：打印正文区所有 heading
+    console.log('[outline] contentContainer:', contentContainer.value)
+    const allH = contentContainer.value.querySelectorAll('h1,h2,h3,h4,h5,h6')
+    console.log('[outline] headings found:', allH.length)
+    allH.forEach(h => console.log(`  ${h.tagName} id="${h.id}" text="${(h as HTMLElement).innerText.slice(0,30)}"`))
+    // Vditor outlineRender 遍历直接子元素找 heading
     if (outlineContainer.value) {
       Vditor.outlineRender(contentContainer.value, outlineContainer.value)
+      console.log('[outline] result HTML:', outlineContainer.value.innerHTML.substring(0, 300))
     }
   }
 }
