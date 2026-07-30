@@ -25,50 +25,64 @@ export async function renderMarkdown(content: string): Promise<string> {
 
 /** 代码块后处理：行号高亮 + 复制按钮 + 语言标签 + 外层容器 */
 export function renderCodeBlocks(container: HTMLElement): void {
-  // 1. 添加语法高亮和行号（hljs 会异步加载）
+  // 1. 添加语法高亮和行号（hljs 异步加载）
   Vditor.highlightRender(
     { style: 'github', lineNumber: true },
     container,
     VDITOR_CDN,
   )
 
-  // 2. 添加复制按钮（.vditor-copy 会被插入到 <pre> 内部，作为 <code> 的前一个兄弟）
+  // 2. 添加复制按钮（.vditor-copy 被插入到 <pre> 内部）
   Vditor.codeRender(container)
 
-  // 3. 为代码块添加外层容器和语言标签头部栏
+  // 3. 为代码块添加外层容器和语言标签头部栏（使用内联样式）
   container.querySelectorAll('pre').forEach((pre) => {
-    // 跳过图表类代码块
     const code = pre.querySelector('code[class*="language-"]')
     if (!code) return
-
-    // 已包装过则跳过
     if (pre.parentElement?.classList.contains('vditor-code-wrapper')) return
 
-    // 提取语言名（兼容 hljs 重构后的 class）
     const langMatch = code.className.match(/language-(\w+)/)
     const lang = langMatch ? langMatch[1] : ''
 
-    // 创建外层容器
+    // 外层容器（内联样式）
     const wrapper = document.createElement('div')
-    wrapper.className = 'vditor-code-wrapper'
+    wrapper.style.cssText = 'margin:1em 0;border:1px solid var(--yuque-border,#e7e9e8);border-radius:8px;overflow:hidden;background:var(--yuque-code-header-bg,#eef0ef)'
 
-    // 创建头部栏（含语言标签 + 复制按钮）
+    // 头部栏
     const header = document.createElement('div')
-    header.className = 'vditor-code-header'
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px 0 16px;border-bottom:1px solid var(--yuque-border-light,#eff0f0);background:var(--yuque-code-header-bg,#eef0ef);user-select:none'
 
+    // 语言标签
     const langLabel = document.createElement('span')
-    langLabel.className = 'vditor-code-lang'
+    langLabel.style.cssText = 'font-size:12px;color:var(--yuque-text-secondary,#8a8f8d);font-family:Consolas,Monaco,monospace;font-weight:500'
     langLabel.textContent = lang
     header.appendChild(langLabel)
 
-    // 把 .vditor-copy 复制按钮从 pre 内部挪到头部栏右侧
-    const copyEl = pre.querySelector('.vditor-copy')
+    // 把 .vditor-copy 移到头部栏右侧
+    const copyEl = pre.querySelector('.vditor-copy') as HTMLElement | null
     if (copyEl) {
-      // .vditor-copy 是 <code> 的前一个兄弟，需要把它移到 pre 外面
+      // 隐藏 textarea
+      const ta = copyEl.querySelector('textarea') as HTMLElement | null
+      if (ta) ta.style.display = 'none'
+      // 美化复制按钮
+      const btn = copyEl.querySelector('span') as HTMLElement | null
+      if (btn) {
+        btn.style.cssText = 'display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;cursor:pointer;color:var(--yuque-text-secondary,#8a8f8d)'
+      }
+      const svg = copyEl.querySelector('svg') as HTMLElement | null
+      if (svg) svg.style.cssText = 'width:14px;height:14px'
+      copyEl.style.display = 'flex'
+      copyEl.style.alignItems = 'center'
       header.appendChild(copyEl)
     }
 
-    // 包装结构：父节点 → wrapper → (header + pre)
+    // 去掉 pre 自带样式
+    pre.style.cssText = 'margin:0!important;border:none!important;border-radius:0!important;background:transparent!important'
+
+    // 去掉 code 背景
+    ;(code as HTMLElement).style.background = 'transparent'
+
+    // 包装
     const parent = pre.parentElement!
     parent.insertBefore(wrapper, pre)
     wrapper.appendChild(header)
